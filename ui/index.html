@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ZenParams</title>
+    <link rel="stylesheet" type="text/css" href="style.css?v=3.5" />
+    <script src="script.js?v=3.5"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div
+        style="
+          font-size: 8px;
+          color: #555;
+          text-align: right;
+          margin-bottom: 2px;
+        "
+      >
+        v3.5 (Industrial)
+      </div>
+      <!-- Input Section -->
+      <div class="input-group">
+        <span class="prompt">></span>
+        <input
+          type="text"
+          id="console-input"
+          placeholder="> Type 'width = 50mm' to create/update..."
+          autofocus
+        />
+      </div>
+
+      <!-- Controls Section -->
+      <div class="controls">
+        <select id="preset-select">
+          <option value="" disabled selected>Select a Preset...</option>
+        </select>
+        <button id="apply-preset">Apply</button>
+        <button id="refresh-btn" title="Refresh Table">↻</button>
+      </div>
+
+      <div id="status-bar" class="status-bar">Ready.</div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <button
+          id="save-preset-btn"
+          class="icon-btn"
+          title="Save Table as Template"
+          style="color: #4ec9b0"
+        >
+          &#128190;
+        </button>
+        <!-- Floppy Disk -->
+        <span style="flex: 0.1"></span>
+        <button id="add-row-btn" class="icon-btn" title="Add Parameter">
+          +
+        </button>
+        <button
+          id="del-row-btn"
+          class="icon-btn"
+          title="Remove Selected"
+          style="color: #ff6b6b"
+        >
+          &times;
+        </button>
+        <span style="flex: 1"></span>
+      </div>
+
+      <!-- Parameter Table Section -->
+      <div class="table-container">
+        <table id="param-table">
+          <thead>
+            <tr>
+              <th width="5%"><input type="checkbox" id="select-all" /></th>
+              <th width="35%">Name</th>
+              <th width="25%">Value</th>
+              <th width="10%">Unit</th>
+              <th width="25%">Comment</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Params injected here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

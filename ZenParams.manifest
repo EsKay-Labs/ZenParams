@@ -1,0 +1,13 @@
+{
+	"autodeskProduct":	"Fusion360",
+	"type":	"addin",
+	"id":	"2c67d38e-b62f-4420-ac29-cc1c676f96e3",
+	"author":	"Antigravity",
+	"description":	{
+		"":	"A joyous console for managing user parameters instantly."
+	},
+	"version":	"1.0",
+	"runOnStartup":	true,
+	"supportedOS":	"windows|mac",
+	"editEnabled":	true
+}
