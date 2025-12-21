@@ -44,6 +44,10 @@ Native Fusion parameters are powerful but slow to access. You have to open a dia
 
 Don't start from scratch.
 
+- **Factory Loaded:** Comes with 3 optimized 3D printing presets out of the box, based on community best practices:
+  - **Standard (0.4n):** Good for general parts (`Clearance=0.2mm`, `Wall=1.2mm`).
+  - **Precision Fit:** Tight tolerances for interlocking parts (`Clearance=0.1mm`).
+  - **Structural:** Heavy walls and loose clearance for functional strength.
 - **Save Template:** Configure your standard variables (e.g., `Thickness`, `Kerf`, `Clearance`) once. Save as "Laser Cut Acrylic".
 - **Instant Load:** Select the preset from the dropdown. ZenParams **previews** the values in the table. Click **Load** to apply them all at once.
 - **Auto-Activation:** Saving a new template automatically applies it and sets it as the "Active" preset for the current design.

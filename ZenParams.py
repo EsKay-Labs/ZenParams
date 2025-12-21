@@ -27,20 +27,30 @@ PALETTE_URL = './ui/index.html'
 # -----------------------------------------------------------------------------
 
 def get_presets():
-    """Returns built-in factory presets."""
+    """Returns built-in factory presets (3D Printing Optimized)."""
     return {
-        "Default (mm)": {
-            "Thickness": "3mm",
-            "Clearance": "0.1mm", 
-            "FilletRad": "1mm"
+        "3DP Standard (0.4n)": {
+            "Nozzle": "0.4 mm",
+            "LayerH": "0.2 mm",
+            "WallThick": "1.2 mm", 
+            "Clearance": "0.2 mm",
+            "HoleComp": "0.15 mm",
+            "FilletSm": "1 mm"
         },
-        "Woodworking (inch)": {
-            "Thickness": "0.75 in",
-            "Kerf": "0.125 in"
+        "3DP Precision Fit": {
+            "Nozzle": "0.4 mm", 
+            "LayerH": "0.12 mm",
+            "WallThick": "0.8 mm", 
+            "Clearance": "0.1 mm", 
+            "HoleComp": "0.1 mm",
+            "PressFit": "0.05 mm"
         },
-        "3D Printing": {
-            "LayerHeight": "0.2mm",
-            "WallCount": "3"
+        "3DP Structural (Strong)": {
+            "Nozzle": "0.6 mm",
+            "LayerH": "0.3 mm", 
+            "WallThick": "2.4 mm", 
+            "Clearance": "0.35 mm",
+            "Shell": "2 mm"
         }
     }
 
