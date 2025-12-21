@@ -330,6 +330,35 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // TAB KEY NAVIGATION - Create new row when tabbing from comment field
+  document.getElementById("param-table").addEventListener("keydown", (e) => {
+    if (e.key === "Tab" && !e.shiftKey) {
+      const target = e.target;
+      // Check if we're in the comment field (last editable field in row)
+      if (target.classList.contains("comment")) {
+        const row = target.closest("tr");
+        const allRows = Array.from(
+          document.querySelectorAll("#param-table tbody tr")
+        );
+        const isLastRow = allRows.indexOf(row) === allRows.length - 1;
+
+        // If this is the last row, create a new one
+        if (isLastRow) {
+          e.preventDefault();
+          addNewRow();
+          // Focus on the name field of the new row
+          const newRow = document.querySelector(
+            "#param-table tbody tr:first-child"
+          );
+          if (newRow) {
+            const nameInput = newRow.querySelector(".name");
+            if (nameInput) nameInput.focus();
+          }
+        }
+      }
+    }
+  });
+
   // -------------------------------------------------------------------------
   // HELPER: Restore State (Smart Logic)
   // -------------------------------------------------------------------------
