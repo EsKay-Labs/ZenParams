@@ -240,7 +240,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       }
     } catch (e) {}
-  }, 1500); // Check every 1.5s
+  }, 2500); // Check every 2.5s (Less aggressive)
 
   // Preset Selection
 

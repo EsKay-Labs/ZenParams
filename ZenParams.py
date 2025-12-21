@@ -661,6 +661,28 @@ class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
         
         return json.dumps(payload)
 
+    def get_active_doc_info_json(self):
+        """Helper to get lightweight info about active doc for polling."""
+        doc_id = ""
+        doc_name = ""
+        try:
+            app = adsk.core.Application.get()
+            design = adsk.fusion.Design.cast(app.activeProduct)
+            if design and design.parentDocument:
+                doc_name = design.parentDocument.name
+                try:
+                    doc_id = design.parentDocument.creationId
+                except:
+                    # Fallback ID
+                    doc_id = doc_name
+        except:
+            pass
+            
+        return json.dumps({
+            'name': doc_name,
+            'id': doc_id
+        })
+
     def get_param_list(self):
         """Helper to get param list without sending it."""
         try:
