@@ -72,7 +72,7 @@ def run(context):
         # Create or Get Palette (Non-Destructive)
         palette = _ui.palettes.itemById(PALETTE_ID)
         if not palette:
-            palette = _ui.palettes.add(PALETTE_ID, 'ZenParams V11', 'ui/zenparams_v11.html', True, True, True, 300, 600)
+            palette = _ui.palettes.add(PALETTE_ID, 'ZenParams V11', 'ui/index.html', True, True, True, 300, 600)
             try:
                 palette.dockingState = adsk.core.PaletteDockingStates.PaletteDockStateRight
             except:

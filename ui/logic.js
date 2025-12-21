@@ -268,6 +268,27 @@ document.addEventListener("DOMContentLoaded", function () {
   var deleteBtn = document.getElementById("delete-preset-btn");
   var addRowBtn = document.getElementById("add-row-btn");
 
+  // Help Modal Logic
+  var helpBtn = document.getElementById("help-btn");
+  var helpModal = document.getElementById("help-modal");
+  var closeSpan = helpModal ? helpModal.querySelector(".close") : null;
+
+  if (helpBtn && helpModal) {
+    helpBtn.onclick = function () {
+      helpModal.style.display = "block";
+    };
+  }
+  if (closeSpan) {
+    closeSpan.onclick = function () {
+      helpModal.style.display = "none";
+    };
+  }
+  window.onclick = function (event) {
+    if (event.target == helpModal) {
+      helpModal.style.display = "none";
+    }
+  };
+
   // Add Row
   if (addRowBtn) {
     addRowBtn.onclick = function () {
