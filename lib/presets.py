@@ -4,7 +4,6 @@ Values based on ISO 2768-m standards and common manufacturing best practices.
 """
 
 PRESETS = {
-    "New Preset": {},
     "3D Print (Tight Fit)": {
         "clearance": "0.1 mm",
         "hole_compensation": "0.15 mm",
