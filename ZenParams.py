@@ -81,7 +81,10 @@ def run(context):
         palette = _ui.palettes.itemById(PALETTE_ID)
         if not palette:
             palette = _ui.palettes.add(PALETTE_ID, 'ZenParams V10', 'ui/zenparams_v10.html', True, True, True, 300, 600)
-            palette.dockingState = adsk.core.PaletteDockingStates.PaletteDockStateRight
+            try:
+                palette.dockingState = adsk.core.PaletteDockingStates.PaletteDockStateRight
+            except:
+                pass  # Docking can fail during startup, just continue floating
             
         _palette = palette
 
@@ -94,6 +97,11 @@ def run(context):
         if _app.isStartupComplete:
             if not palette.isVisible:
                  show_palette()
+            # FIRST DOC FIX: Send initial data for the already-open document
+            try:
+                on_html_event.send_initial_data()
+            except:
+                pass
         else:
             on_startup_completed = StartupCompletedHandler()
             _app.startupCompleted.add(on_startup_completed)
