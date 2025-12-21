@@ -210,6 +210,42 @@ document.addEventListener("DOMContentLoaded", function () {
     };
   }
 
+  // LIVE PREVIEW - When preset selection changes, show preview in table
+  if (presetSelect) {
+    presetSelect.onchange = function () {
+      var selected = presetSelect.value;
+      if (!selected || !GLOBAL_PRESETS[selected]) return;
+
+      var presetData = GLOBAL_PRESETS[selected];
+      if (Object.keys(presetData).length === 0) {
+        fillTable([]);
+        return;
+      }
+
+      // Clear existing rows and show preset as preview
+      var tbody = document.querySelector("#param-table tbody");
+      tbody.innerHTML = "";
+
+      for (var key in presetData) {
+        var tr = document.createElement("tr");
+        tr.dataset.user = "true";
+        tr.innerHTML =
+          '<td><input type="text" class="tbl-input name" value="' +
+          key +
+          '"></td>' +
+          '<td><input type="text" class="tbl-input expr modified" value="' +
+          presetData[key] +
+          '"></td>' +
+          '<td style="font-size:11px; color:#666;">mm</td>' +
+          '<td><input type="text" class="tbl-input comment" value=""></td>' +
+          '<td><button class="row-delete">×</button></td>';
+        tbody.appendChild(tr);
+      }
+      attachDeleteHandlers();
+      setStatus("Preview: " + selected + " (click Apply to load)", "info");
+    };
+  }
+
   // Create New Preset
   if (createBtn) {
     createBtn.onclick = function () {
