@@ -117,17 +117,32 @@ function attachDeleteHandlers(context) {
 }
 
 function attachEnterHandlers(context) {
-  var inputs = (context || document).querySelectorAll(".tbl-input.comment"); // Only on Last field? Or all?
-  // Better on all inputs in the row
   var allInputs = (context || document).querySelectorAll(".tbl-input");
   allInputs.forEach(function (inp) {
     inp.onkeydown = function (e) {
       if (e.key === "Enter") {
+        e.preventDefault();
+
+        // 1. Instant Sync (No Refresh)
+        var changes = gatherTableData();
+        sendToFusion("batch_update", {
+          items: changes,
+          suppress_refresh: true,
+        });
+
+        // 2. Continue Flow
         addNewRow();
       }
     };
   });
 }
+
+// Global Shortcuts
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape") {
+    sendToFusion("close_palette", {});
+  }
+});
 
 function addNewRow() {
   var tbody = document.querySelector("#param-table tbody");

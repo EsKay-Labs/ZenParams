@@ -161,6 +161,8 @@ class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
                 self.handle_set_current_preset(data)
             elif action == 'delete_param':
                 self.handle_delete_param(data, args)
+            elif action == 'close_palette':
+                self.handle_close_palette()
             elif action == 'refresh':
                 self.send_all_params()
                 
@@ -181,6 +183,12 @@ class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
             except: pass
 
     # --- ACTION HANDLERS ---
+    
+    def handle_close_palette(self):
+        """Hides the palette (Minimizes)."""
+        palette = _ui.palettes.itemById(PALETTE_ID)
+        if palette:
+            palette.isVisible = False
 
     def handle_delete_param(self, data, args):
         param_name = data.get('name')
@@ -217,11 +225,32 @@ class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
         design = adsk.fusion.Design.cast(app.activeProduct)
         if not design: return
 
+        # Check for suppression flag (passed as dict or list?)
+        # Logic.js sends payload as data directly.
+        # If data is list, it's just updates. 
+        # We need to change JS to send {updates: [], flags: {}}? 
+        # Or just handle list and separate flag?
+        # Let's inspect 'data' in notify. 'data' is what we passed to handle_batch_update.
+        # I will change logic in notify to pass full data if it's a dict?
+        # No, let's keep it simple. I'll rely on a special key in the updates list?
+        # HACK: If the LAST item in updates is a config dict? No.
+        # Better: Change notify to pass (data, args) or just extract flags there.
+        # Let's see notify again.
+        pass # Placeholder for diff context
+        
+        # ACTUALLY, I'll modify handle_batch_update to check if 'updates' is a dict with 'items' and 'flags'
+        items = updates
+        suppress = False
+        
+        if isinstance(updates, dict):
+            items = updates.get('items', [])
+            suppress = updates.get('suppress_refresh', False)
+        
         count = 0
         errors = []
         
         try:
-            for item in updates:
+            for item in items:
                 name = item.get('name')
                 expr = item.get('expression')
                 cmt = item.get('comment')
@@ -255,7 +284,9 @@ class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
                 self.send_response(f"Updated {count}.", "success")
             
             adsk.doEvents()
-            self.send_all_params()
+            
+            if not suppress:
+                self.send_all_params()
             
         except Exception as e:
             self.send_response(f"Batch Error: {e}", "error")

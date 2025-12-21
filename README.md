@@ -1,101 +1,100 @@
-# ZenParams 🚀
+# ⚡ ZenParams PRO ⚡
 
-**The "Logic-First" Parameter Manager for Autodesk Fusion 360**
+### _THE "GOD MODE" PARAMETER MANAGER FOR FUSION 360_
 
-> Stop clicking "Okay". Start designing.
-
-ZenParams is a professional, open-source Add-In that transforms how you handle parametric design in Fusion 360. It replaces the native, modal "Change Parameters" dialog with a fast, modeless, and logic-driven palette.
-
-![ZenParams UI Preview](resources/ui_preview.png)
+> 🛑 **WARNING:** This plugin may cause sudden bursts of extreme productivity, uncontrollable smiling during the design phase, and a complete intolerance for manual data entry.
 
 ---
 
-## 🏆 Why "Next Level"? (The Zen Philosophy)
+## 😤 THE PROBLEM
 
-Native Fusion parameters are powerful but slow to access. You have to open a dialog, block your view, click `+`, type, click `OK`. ZenParams removes the friction.
+Let's be real. Managing parameters in Fusion 360 is **boring**.
+You start a new design. You type `tol_snug = 0.15mm`. You type `wall_thick = 1.2mm`. You do this **EVERY. SINGLE. TIME.**
+You are a creative engineer, not a data entry clerk. Stop acting like one.
 
-### 1. Modeless & Dockable
+## 🚀 THE SOLUTION
 
-**The Native Way:** Open Dialog -> View Blocked -> Close Dialog to Rotate Model -> Re-open Dialog.
-**The Zen Way:** Dock the palette to the right. Change a value like `Length` from `50mm` to `100mm` and see your model update **instantly** without closing anything.
+**ZenParams PRO** is the high-octane injection your workflow has been screaming for. It takes the tedious, soul-crushing task of parameter management and automates it into a **single click**.
 
-### 2. Rapid Data Entry (Keyboard First)
-
-**The Native Way:** Click `+`. Type Name. Click Value. Type Value. Click OK. Repeat.
-**The Zen Way:**
-
-- Type `Name` -> `Tab` -> `Value` -> `Tab` -> `Comment` -> **`Enter`**.
-- **`Enter`** automatically creates a new row and focuses it.
-- You can define 10 parameters in 30 seconds without touching the mouse.
-
-### 3. "True Delete" with Dependency Guard 🛡️
-
-**The Native Way:** Deleting used parameters throws cryptic errors or breaks features.
-**The Zen Way:** Click the **`×`** button. ZenParams intelligently checks if the parameter is used by any feature (Extrude, Sketch, etc.).
-
-- **Safe:** If used, it warns you: _"Cannot delete 'd1': Used in design."_
-- **Clean:** If unused, it permanently deletes it from the Fusion file, keeping your timeline clean.
+We didn't just build a plugin. We built a **Time Machine** that gives you back hours of your life.
 
 ---
 
-## ⚡ Key Features (Every Detail)
+## 🔥 KILLER FEATURES
 
-### 📂 Smart Presets (Templates)
+### 1. 🧬 PRESET CLONING (The "Magic Button")
 
-Don't start from scratch.
+Save your _entire_ parameter list as a Preset.
 
-- **Factory Loaded:** "3DP Tolerances (Global)" - A single master preset containing standard keys for every fit type:
-  - `Tol_Press` (0.10mm), `Tol_Snug` (0.15mm), `Tol_Slide` (0.25mm), `Tol_Loose` (0.40mm).
-  - `Tol_Hole` (0.20mm) and `Tol_Thread` (0.20mm).
-- **Save Template:** Configure your standard variables (e.g., `Thickness`, `Kerf`, `Clearance`) once. Save as "Laser Cut Acrylic".
-- **Instant Load:** Select the preset from the dropdown. ZenParams **previews** the values in the table. Click **Load** to apply them all at once.
-- **Auto-Activation:** Saving a new template automatically applies it and sets it as the "Active" preset for the current design.
+- Working on a PLA project? **CLICK.** Boom, all your PLA tolerances are loaded.
+- Switching to CNC Aluminum? **CLICK.** Boom, your machining allowances are set.
+- **It’s like Copy-Paste for your entire brain.**
 
-### 🔄 Intelligent Context Awareness
+### 2. 🖨️ 3D PRINTING "GOD MODE" (Built-In)
 
-ZenParams knows where you are.
+We included the **Holy Grail** of 3D printing tolerances right out of the box. Stop guessing.
 
-- **Multi-Doc Support:** Switch between open design tabs (`Design A` -> `Design B`). ZenParams detects the switch (via a smart 2.5s watchdog) and automatically refreshes to show `Design B`'s parameters.
-- **Persistence:** The active preset name is stored _inside the Fusion file_ (in a hidden parameter `_zen_current_preset`). If you send the file to a colleague with ZenParams, they see the same preset name.
+- `Tol_Press` (0.10mm): For bearings that never move.
+- `Tol_Snug` (0.15mm): For satisfying "click" fits.
+- `Tol_Slide` (0.25mm): For buttery smooth hinges.
+- `Tol_Loose` (0.40mm): For when you just don't care.
 
-### 👁️ Live Preview & Visual Feedback
+### 3. ⚡ BATCH BLASTING
 
-- **Preview Mode:** Selecting a preset shows values in the table with a visual "Modified" style, letting you verify data before committing to the model.
-- **Read-Only Model Params:** ZenParams displays native Model Parameters (like `d1`, `d2`) in a dimmed, read-only style, so you can reference their values without accidentally breaking driven dimensions.
-- **Status Bar:** Real-time feedback ("Saved", "Syncing...", "Error") keeps you informed.
+Need to update 50 parameters? Change names? Delete the old ones?
+Do it in **bulk**. Our UI handles the heavy lifting while you sip coffee.
 
-### 📥 Legacy Import
+### 4. 🧠 DEPENDENCY CHECKS
 
-Opening an old project?
-
-- ZenParams detects if a design has parameters (`UserParameters > 0`) but no ZenParams preset.
-- A blue notification bar appears: **"Found existing parameters."**
-- Click **"⬇️ Import"** to instantly pull them into the UI and save them as a new Template.
+ZenParams is smart. It won't let you delete a parameter that's currently holding your entire assembly together. It’s the safety net you didn't know you needed.
 
 ---
 
-## 🛠️ Architecture (For Developers)
+## 📦 INSTALLATION (30 Seconds)
 
-ZenParams is built on a robust hybrid architecture:
-
-- **Backend (Python):** Handles Fusion API calls, dependency checks, file I/O, and event dispatching.
-- **Frontend (HTML/JS):** A responsive, dark-themed UI built with vanilla JS (no heavy frameworks).
-- **Communication:** Uses a reliable message bus (`adsk.fusionSendData`).
-- **Resilience:** Includes `adsk.autoTerminate(False)` to prevent garbage collection of event handlers—a common issue in complex Add-Ins.
-
----
-
-## 📦 Installation
-
-1.  **Download:** Clone or download this repository.
-2.  **Locate Scripts Folder:**
-    - **Windows:** `%appdata%\Autodesk\Autodesk Fusion 360\API\Scripts\`
-    - **Mac:** `~/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/`
-3.  **Install:** Copy the `ZenParams` folder into the Scripts folder.
-4.  **Run:** Restart Fusion 360. Go to **Utilities > Scripts and Add-Ins**. Select `ZenParams` and check **"Run on Startup"**.
+1.  **Download** this repo.
+2.  **Move** the folder to your Fusion 360 Scripts folder:
+    - _Windows_: `%appdata%\Autodesk\Autodesk Fusion 360\API\Scripts\`
+    - _Mac_: `~/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/`
+3.  **Open Fusion 360** -> **Utilities** -> **Scripts and Add-Ins**.
+4.  Find **ZenParams** and click **RUN**.
+5.  _Optional_: Check "Run on Startup" so you never have to live without it again.
 
 ---
 
-**License:** MIT
-**Version:** 11.0
-**Author:** ZenParams Team
+## 🎮 HOW TO USE
+
+1.  **Open the Palette**: You'll see the "ZenParams Pro" icon in your toolbar. Click it.
+2.  **Load a Preset**: Click "3DP Tolerances (Global)" to load the built-in magic.
+3.  **Customize**: Edit values in the table.
+4.  **Save Your Own**: Click "Save Preset", name it (e.g., "PETG Master"), and feel the power.
+5.  **Apply**: Just select a preset and your current design is instantly populated.
+
+---
+
+## ⌨️ PRO TIPS (Keyboard First)
+
+- **RAPID ENTRY**: Type `Name` -> `Tab` -> `Value` -> `Tab` -> `Comment` -> **`Enter`**.
+  - **`Enter`** instantly **saves** the parameter to Fusion and creates a new row. You can define 10 parameters in 30 seconds.
+- **INSTANT HIDE**: Press **`Esc`** at any time to instantly minimize the palette and get back to your design.
+
+---
+
+## 🏆 CREDITS
+
+Built for the **Builders**, the **Makers**, and the **Engineers** who value their time.
+
+- **Core Logic**: Python 3.x
+- **UI**: HTML5/JS (Chrome Engine)
+- **Vibe**: Unstoppable
+
+---
+
+### 💬 FEEDBACK
+
+Found a bug? Want to request a feature?
+**Don't keep it to yourself.** Open an issue. We eat bugs for breakfast.
+
+### 📄 LICENSE
+
+**MIT**. Open Source. Free forever. Go build something awesome.
