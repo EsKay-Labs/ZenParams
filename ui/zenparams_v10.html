@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ZenParams v10</title>
+    <script src="zenparams_v10.js"></script>
+    <style>
+      /* Dark Theme Redesign */
+      body {
+        font-family: "Segoe UI", sans-serif;
+        font-size: 13px;
+        margin: 0;
+        padding: 0;
+        background-color: #1e1e1e; /* VSCode Dark */
+        color: #cccccc;
+      }
+      .container {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        box-sizing: border-box;
+      }
+
+      /* Input Group */
+      .input-group {
+        display: flex;
+        align-items: center;
+        background: #252526; /* Slightly lighter */
+        border: 1px solid #3e3e42;
+        border-radius: 4px;
+        padding: 4px 8px;
+        margin-bottom: 1px;
+      }
+      .prompt {
+        color: #2e8b57; /* SeaGreen */
+        font-weight: bold;
+        margin-right: 8px;
+      }
+      input[type="text"] {
+        background: transparent;
+        border: none;
+        color: #d4d4d4;
+        flex-grow: 1;
+        outline: none;
+        font-family: "Consolas", monospace;
+      }
+      input[type="text"]::placeholder {
+        color: #555;
+      }
+
+      /* Controls */
+      .controls {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+        margin-bottom: 8px;
+        align-items: center;
+      }
+      select {
+        flex-grow: 1;
+        padding: 4px;
+        border-radius: 4px;
+        background: #252526;
+        color: #cccccc;
+        border: 1px solid #3e3e42;
+      }
+      button {
+        background: #3e3e42;
+        color: #cccccc;
+        border: 1px solid #454545;
+        border-radius: 4px;
+        padding: 4px 12px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      button:hover {
+        background: #505050;
+      }
+      #load-preset-btn {
+        background: #0e639c;
+        border-color: #0e639c;
+        color: white;
+      }
+      #load-preset-btn:hover {
+        background: #1177bb;
+      }
+
+      /* New Compact Action Buttons (+/-) */
+      .action-buttons {
+        display: flex;
+        gap: 4px;
+        justify-content: flex-end;
+        margin-bottom: 4px;
+      }
+      .action-btn {
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        border-radius: 3px;
+        background: #2d2d2d;
+        border: 1px solid #3e3e42;
+      }
+      .add-btn {
+        color: #87d7b4;
+      } /* Soft Green */
+      .del-btn {
+        color: #f28b82;
+      } /* Soft Red */
+
+      /* Table */
+      .table-container {
+        flex-grow: 1;
+        overflow-y: auto;
+        border: 1px solid #3e3e42;
+        background: #252526;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        background: #2d2d2d;
+        color: #999;
+        font-weight: normal;
+        text-align: left;
+        padding: 4px 8px;
+        border-bottom: 1px solid #3e3e42;
+        font-size: 11px;
+      }
+      td {
+        padding: 4px 8px;
+        border-bottom: 1px solid #2d2d2d;
+      }
+      .tbl-input {
+        width: 95%;
+        background: transparent;
+        border: 1px solid transparent;
+        color: #cccccc;
+        padding: 2px;
+      }
+      .tbl-input:focus {
+        background: #1e1e1e;
+        border: 1px solid #007acc;
+      }
+      .tbl-input.name {
+        color: #9cdcfe;
+      } /* VSCode Blue */
+      .tbl-input.expr {
+        color: #ce9178;
+        font-family: "Consolas", monospace;
+      } /* VSCode String Color */
+
+      /* Status Bar */
+      .status-bar {
+        font-size: 11px;
+        color: #666;
+        padding: 4px;
+        border-top: 1px solid #3e3e42;
+        margin-top: 8px;
+        transition: color 0.3s;
+      }
+      .status-bar.success {
+        color: #87d7b4;
+      }
+      .status-bar.error {
+        color: #f28b82;
+      }
+      .status-bar.info {
+        color: #6ec3ff;
+      }
+
+      /* Current Preset Display */
+      .current-preset {
+        font-size: 11px;
+        color: #888;
+        text-align: right;
+        margin-bottom: 4px;
+      }
+      #current-preset-name {
+        font-weight: bold;
+        color: #dcdcdc;
+      }
+
+      /* Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+      .modal-content {
+        background-color: #252526;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #454545;
+        width: 80%;
+        border-radius: 5px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+      }
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .close:hover {
+        color: #fff;
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #1e1e1e;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #424242;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+          border-bottom: 1px solid #3e3e42;
+          padding-bottom: 8px;
+        "
+      >
+        <div style="font-size: 11px; color: #888; font-weight: 500">v10.1</div>
+        <button
+          id="help-btn"
+          class="icon-btn"
+          title="How to Use"
+          style="
+            background: transparent;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-weight: bold;
+          "
+        >
+          ?
+        </button>
+      </div>
+
+      <!-- Current Preset Display (Distinct & Colored) -->
+      <div
+        id="current-preset"
+        class="current-preset"
+        style="text-align: left; margin-bottom: 12px; font-size: 13px"
+      >
+        <span style="color: #888; font-weight: bold">Current Load:</span>
+        <span
+          id="current-preset-name"
+          style="color: #4ec9b0; font-weight: normal; margin-left: 5px"
+          >New Design</span
+        >
+      </div>
+
+      <!-- Input Section -->
+      <div class="input-group">
+        <span class="prompt">></span>
+        <input
+          type="text"
+          id="console-input"
+          placeholder="width = 50mm"
+          autofocus
+          list="param-suggestions"
+        />
+        <datalist id="param-suggestions"></datalist>
+      </div>
+
+      <!-- New Compact Action Toolbar -->
+      <div class="action-buttons" style="margin-top: 4px; margin-bottom: 8px">
+        <!-- Added small visual separator or align these next to input if needed, but keeping separate line for clarity -->
+        <button
+          id="add-row-btn"
+          class="action-btn add-btn"
+          title="Add Parameter"
+        >
+          +
+        </button>
+        <button
+          id="del-row-btn"
+          class="action-btn del-btn"
+          title="Remove Selected"
+        >
+          −
+        </button>
+      </div>
+
+      <!-- Parameter Table Section -->
+      <div class="table-container">
+        <table id="param-table">
+          <thead>
+            <tr>
+              <th width="5%"><input type="checkbox" id="select-all" /></th>
+              <th width="35%">Name</th>
+              <th width="25%">Value</th>
+              <th width="10%">Unit</th>
+              <th width="25%">Comment</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Controls Section (Footer) -->
+      <div
+        class="controls preset-controls"
+        style="border-top: 1px solid #3e3e42; padding-top: 8px"
+      >
+        <select id="preset-select">
+          <option value="" disabled selected>Load Preset...</option>
+        </select>
+        <button id="load-preset-btn" title="Load Preset">Load</button>
+        <button id="save-preset-btn" title="Save Current Table as Preset">
+          Save
+        </button>
+        <button
+          id="delete-preset-btn"
+          title="Delete Selected Preset"
+          style="background: #3e3e42; color: #f28b82; border-color: #3e3e42"
+        >
+          Del
+        </button>
+      </div>
+
+      <div id="status-bar" class="status-bar">Ready.</div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 style="color: #4ec9b0; margin-top: 0">ZenParams v10 Quick Guide</h2>
+        <p>
+          1. <strong>Create:</strong> Type <code>width = 50mm</code> and hit
+          Enter.
+        </p>
+        <p>
+          2. <strong>Load:</strong> Select a preset from the dropdown and click
+          Load.
+        </p>
+        <p>
+          3. <strong>Save:</strong> Click Save to create your own custom
+          presets.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
