@@ -135,12 +135,18 @@ def stop(context):
     _handlers = []
     
     try:
-        # Clean up palette
+        # FORCE DELETE ALL PALETTE VERSIONS to bust cache
+        for v in ['zenparams_palette_v1', 'zenparams_palette_v2', 'zenparams_palette_v3', 
+                  'zenparams_palette_v4', 'zenparams_palette_v5', 'zenparams_palette_v6',
+                  'zenparams_palette_v7', 'zenparams_palette_v8', 'zenparams_palette_v9']:
+            old_palette = _ui.palettes.itemById(v)
+            if old_palette:
+                old_palette.deleteMe()
+        
+        # Also delete current
         _palette = _ui.palettes.itemById(PALETTE_ID)
         if _palette:
-            # NON-DESTRUCTIVE: Keep palette open
-            pass
-            # _palette.deleteMe()
+            _palette.deleteMe()
             
         # Clean up UI controls from Modify Panel
         target_panel = _ui.allToolbarPanels.itemById('SolidModifyPanel')
