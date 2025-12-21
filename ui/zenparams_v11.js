@@ -210,6 +210,40 @@ document.addEventListener("DOMContentLoaded", function () {
     };
   }
 
+  // -------------------------------------------------------------------------
+  // WATCHDOG LOOP (Smart Polling for Tab Changes)
+  // -------------------------------------------------------------------------
+  var lastDocId = "";
+
+  setInterval(function () {
+    try {
+      var promise = adsk.fusionSendData(
+        "send",
+        JSON.stringify({ action: "get_active_doc_info", data: {} })
+      );
+      if (promise && promise.then) {
+        promise.then(function (resp) {
+          if (resp) {
+            try {
+              var info = JSON.parse(resp);
+              if (info && info.id) {
+                // If doc ID changed from last known, Refresh everything!
+                if (lastDocId && lastDocId !== info.id) {
+                  console.log("[ZP] Tab Change Detected! Refreshing...");
+                  setStatus("Syncing...", "info");
+                  requestData();
+                }
+                lastDocId = info.id;
+              }
+            } catch (e) {}
+          }
+        });
+      }
+    } catch (e) {}
+  }, 1500); // Check every 1.5s
+
+  // Preset Selection
+
   // LIVE PREVIEW - When preset selection changes, show preview in table
   if (presetSelect) {
     presetSelect.onchange = function () {

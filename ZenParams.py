@@ -328,6 +328,10 @@ class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
             
             if action == 'check': 
                 pass
+            elif action == 'get_active_doc_info':
+                # Lightweight check for JS polling
+                active_doc_info = self.get_active_doc_info_json()
+                args.returnData = active_doc_info
             elif action == 'create_param':
                 self.handle_create_param(data)
             elif action == 'get_initial_data':
