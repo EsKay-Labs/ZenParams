@@ -27,30 +27,25 @@ PALETTE_URL = './ui/index.html'
 # -----------------------------------------------------------------------------
 
 def get_presets():
-    """Returns built-in factory presets (3D Printing Optimized)."""
+    """Returns built-in factory presets (3D Printing Design Specs)."""
     return {
-        "3DP Standard (0.4n)": {
-            "Nozzle": "0.4 mm",
-            "LayerH": "0.2 mm",
+        "3DP Standard": {
             "WallThick": "1.2 mm", 
             "Clearance": "0.2 mm",
             "HoleComp": "0.15 mm",
             "FilletSm": "1 mm"
         },
-        "3DP Precision Fit": {
-            "Nozzle": "0.4 mm", 
-            "LayerH": "0.12 mm",
+        "3DP Precision": {
             "WallThick": "0.8 mm", 
             "Clearance": "0.1 mm", 
             "HoleComp": "0.1 mm",
             "PressFit": "0.05 mm"
         },
-        "3DP Structural (Strong)": {
-            "Nozzle": "0.6 mm",
-            "LayerH": "0.3 mm", 
+        "3DP Structural": {
             "WallThick": "2.4 mm", 
             "Clearance": "0.35 mm",
-            "Shell": "2 mm"
+            "RibThick": "1.6 mm",
+            "MinFeature": "0.8 mm"
         }
     }
 
