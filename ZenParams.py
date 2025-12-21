@@ -479,10 +479,13 @@ def run(context):
         cmd_def.commandCreated.add(on_created)
         _handlers.append(on_created)
         
-        # Toolbar
-        panel = _ui.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
-        if panel:
-            panel.controls.addCommand(cmd_def)
+        # Move to the Modify Panel (Design > Solid > Modify)
+        modify_panel = _ui.allToolbarPanels.itemById('SolidModifyPanel')
+        if modify_panel:
+            # Check if it exists there first
+            existing_ctrl = modify_panel.controls.itemById(CMD_ID)
+            if not existing_ctrl:
+                modify_panel.controls.addCommand(cmd_def)
             
         # Check Palettes
         palette = _ui.palettes.itemById(PALETTE_ID)
@@ -515,9 +518,14 @@ def stop(context):
         cmd = _ui.commandDefinitions.itemById(CMD_ID)
         if cmd: cmd.deleteMe()
         
-        panel = _ui.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
-        if panel:
-            c = panel.controls.itemById(CMD_ID)
+        modify_panel = _ui.allToolbarPanels.itemById('SolidModifyPanel')
+        if modify_panel:
+            c = modify_panel.controls.itemById(CMD_ID)
+            if c: c.deleteMe()
+            
+        scripts_panel = _ui.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
+        if scripts_panel:
+            c = scripts_panel.controls.itemById(CMD_ID)
             if c: c.deleteMe()
             
     except:

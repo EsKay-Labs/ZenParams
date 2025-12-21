@@ -64,7 +64,7 @@ ZenParams is smart. It won't let you delete a parameter that's currently holding
 
 ## 🎮 HOW TO USE
 
-1.  **Open the Palette**: You'll see the "ZenParams Pro" icon in your toolbar. Click it.
+1.  **Open the Palette**: You'll find the **ZenParams Pro** icon in your **Modify** panel (Design > Solid > Modify). It's also in the **Modify** dropdown menu.
 2.  **Load a Preset**: Click "3DP Tolerances (Global)" to load the built-in magic.
 3.  **Customize**: Edit values in the table.
 4.  **Save Your Own**: Click "Save Preset", name it (e.g., "PETG Master"), and feel the power.
@@ -76,7 +76,7 @@ ZenParams is smart. It won't let you delete a parameter that's currently holding
 
 - **RAPID ENTRY**: Type `Name` -> `Tab` -> `Value` -> `Tab` -> `Comment` -> **`Enter`**.
   - **`Enter`** instantly **saves** the parameter to Fusion and creates a new row. You can define 10 parameters in 30 seconds.
-- **INSTANT HIDE**: Press **`Esc`** at any time to instantly minimize the palette and get back to your design.
+- **INSTANT HIDE**: Press **`Esc`** at any time to instantly hide the palette. Simply click the **ZenParams Pro** icon in the **Modify** menu to bring it back exactly where you left it.
 
 ---
 
