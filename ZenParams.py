@@ -296,10 +296,12 @@ class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
                         val_input = adsk.core.ValueInput.createByString(expr)
                         try:
                             design.userParameters.add(name, val_input, "mm", cmt or "")
+                            adsk.doEvents()
                             count += 1
                         except:
                             try:
                                 design.userParameters.add(name, val_input, "", cmt or "")
+                                adsk.doEvents()
                                 count += 1
                             except Exception as e:
                                 errors.append(f"{name}: {e}")
