@@ -1,81 +1,98 @@
-# ZenParams ⚡
+# ZenParams 🚀
 
-**The Logic-First Parameter Manager for Autodesk Fusion 360**
+**The "Logic-First" Parameter Manager for Autodesk Fusion 360**
 
 > Stop clicking "Okay". Start designing.
 
-ZenParams is a professional-grade Add-In that replaces the clunky, modal "Change Parameters" dialog with a fast, dockable, modeless palette. It is designed for power users who rely on logic, equations, and rapid iteration.
+ZenParams is a professional, open-source Add-In that transforms how you handle parametric design in Fusion 360. It replaces the native, modal "Change Parameters" dialog with a fast, modeless, and logic-driven palette.
 
-![ZenParams UI](resources/ui_preview.png)
-
-## 🚀 Why ZenParams?
-
-### The Problem with Native Parameters
-
-1.  **Modal Blocking:** You open the dialog -> You can't touch the model. You close it -> You lose your place.
-2.  **Slow Entry:** Clicking "+" for every single parameter is tedious.
-3.  **No Templates:** Every design starts from scratch. Reuse is painful.
-
-### The ZenParams Solution
-
-1.  **Modeless & Dockable:** Keep the palette open while you work. Tweak a value, see the model update instantly.
-2.  **Rapid Entry:** Type `Name` -> `Tab` -> `Value` -> `Enter`. Rinse and repeat. No mouse needed.
-3.  **Powerful Presets:** Save your standard configurations (fasteners, material thicknesses, tolerance classes) as Templates and switch between them instantly.
+![ZenParams UI Preview](resources/ui_preview.png)
 
 ---
 
-## 🌟 Key Features
+## 🏆 Why "Next Level"? (The Zen Philosophy)
 
-### 1. ⚡ Rapid Data Entry (New!)
+Native Fusion parameters are powerful but slow to access. You have to open a dialog, block your view, click `+`, type, click `OK`. ZenParams removes the friction.
 
-Forget the mouse.
+### 1. Modeless & Dockable
 
-- **Enter Key:** Press `Enter` in any field to instantly spawn a new row.
-- **Tab Navigation:** Tab through Name, Expression, and Comments naturally.
+**The Native Way:** Open Dialog -> View Blocked -> Close Dialog to Rotate Model -> Re-open Dialog.
+**The Zen Way:** Dock the palette to the right. Change a value like `Length` from `50mm` to `100mm` and see your model update **instantly** without closing anything.
 
-### 2. 📂 Smart Presets & Templates
+### 2. Rapid Data Entry (Keyboard First)
 
-Save your parameter sets.
+**The Native Way:** Click `+`. Type Name. Click Value. Type Value. Click OK. Repeat.
+**The Zen Way:**
 
-- **Create Template:** Setup your variables once (e.g., `Thickness`, `Play`, `Bends`). Save as "Sheet Metal 3mm".
-- **Load & Switch:** Select "Sheet Metal 5mm" from the dropdown to instantly update all values.
-- **Auto-Activation:** Saving a preset automatically activates it for the current design.
+- Type `Name` -> `Tab` -> `Value` -> `Tab` -> `Comment` -> **`Enter`**.
+- **`Enter`** automatically creates a new row and focuses it.
+- You can define 10 parameters in 30 seconds without touching the mouse.
 
-### 3. 🛡️ Professional "True Delete"
+### 3. "True Delete" with Dependency Guard 🛡️
 
-- **Safety First:** ZenParams checks for dependencies before deletion.
-- **Clean:** Reliably deletes parameters from the Fusion design (not just the list), keeping your file clean.
+**The Native Way:** Deleting used parameters throws cryptic errors or breaks features.
+**The Zen Way:** Click the **`×`** button. ZenParams intelligently checks if the parameter is used by any feature (Extrude, Sketch, etc.).
 
-### 4. 🔄 Legacy Import
+- **Safe:** If used, it warns you: _"Cannot delete 'd1': Used in design."_
+- **Clean:** If unused, it permanently deletes it from the Fusion file, keeping your timeline clean.
 
-Opening an old file?
+---
 
-- ZenParams detects existing parameters.
-- Click **"⬇️ Import"** to capture them into the UI and save them as a new Preset immediately.
+## ⚡ Key Features (Every Detail)
 
-### 5. 🧠 Intelligent context
+### 📂 Smart Presets (Templates)
 
-- **Tab Switching:** The palette automatically follows you. Switch tabs, and ZenParams refreshes to show the active design's data.
+Don't start from scratch.
+
+- **Save Template:** Configure your standard variables (e.g., `Thickness`, `Kerf`, `Clearance`) once. Save as "Laser Cut Acrylic".
+- **Instant Load:** Select the preset from the dropdown. ZenParams **previews** the values in the table. Click **Load** to apply them all at once.
+- **Auto-Activation:** Saving a new template automatically applies it and sets it as the "Active" preset for the current design.
+
+### 🔄 Intelligent Context Awareness
+
+ZenParams knows where you are.
+
+- **Multi-Doc Support:** Switch between open design tabs (`Design A` -> `Design B`). ZenParams detects the switch (via a smart 2.5s watchdog) and automatically refreshes to show `Design B`'s parameters.
+- **Persistence:** The active preset name is stored _inside the Fusion file_ (in a hidden parameter `_zen_current_preset`). If you send the file to a colleague with ZenParams, they see the same preset name.
+
+### 👁️ Live Preview & Visual Feedback
+
+- **Preview Mode:** Selecting a preset shows values in the table with a visual "Modified" style, letting you verify data before committing to the model.
+- **Read-Only Model Params:** ZenParams displays native Model Parameters (like `d1`, `d2`) in a dimmed, read-only style, so you can reference their values without accidentally breaking driven dimensions.
+- **Status Bar:** Real-time feedback ("Saved", "Syncing...", "Error") keeps you informed.
+
+### 📥 Legacy Import
+
+Opening an old project?
+
+- ZenParams detects if a design has parameters (`UserParameters > 0`) but no ZenParams preset.
+- A blue notification bar appears: **"Found existing parameters."**
+- Click **"⬇️ Import"** to instantly pull them into the UI and save them as a new Template.
+
+---
+
+## 🛠️ Architecture (For Developers)
+
+ZenParams is built on a robust hybrid architecture:
+
+- **Backend (Python):** Handles Fusion API calls, dependency checks, file I/O, and event dispatching.
+- **Frontend (HTML/JS):** A responsive, dark-themed UI built with vanilla JS (no heavy frameworks).
+- **Communication:** Uses a reliable message bus (`adsk.fusionSendData`).
+- **Resilience:** Includes `adsk.autoTerminate(False)` to prevent garbage collection of event handlers—a common issue in complex Add-Ins.
 
 ---
 
 ## 📦 Installation
 
-1.  Download the repository.
-2.  Copy the folder to your Fusion 360 Scripts directory:
+1.  **Download:** Clone or download this repository.
+2.  **Locate Scripts Folder:**
     - **Windows:** `%appdata%\Autodesk\Autodesk Fusion 360\API\Scripts\`
     - **Mac:** `~/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/`
-3.  Restart Fusion 360.
-4.  Go to **Utilities > Scripts and Add-Ins**, select `ZenParams`, and check "Run on Startup".
-
-## 🛠️ Usage
-
-1.  **Open:** The palette appears automatically (or via `Modify` panel).
-2.  **Add:** Type your first parameter. Press `Enter` to add more.
-3.  **Apply:** Click **Load** to commit changes to Fusion (if not auto-updating).
-4.  **Save Preset:** Click **Save Template** to store your current setup for future use.
+3.  **Install:** Copy the `ZenParams` folder into the Scripts folder.
+4.  **Run:** Restart Fusion 360. Go to **Utilities > Scripts and Add-Ins**. Select `ZenParams` and check **"Run on Startup"**.
 
 ---
 
-**License:** MIT  
-**Version:** 11.0 (Pro Edition)
+**License:** MIT
+**Version:** 11.0
+**Author:** ZenParams Team
