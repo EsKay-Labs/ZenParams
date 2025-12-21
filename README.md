@@ -44,10 +44,9 @@ Native Fusion parameters are powerful but slow to access. You have to open a dia
 
 Don't start from scratch.
 
-- **Factory Loaded:** Comes with 3 optimized 3D printing presets that focus purely on **design geometry**:
-  - **Standard:** General use (`Clearance=0.2mm`, `Wall=1.2mm`).
-  - **Precision:** Snap fits (`Clearance=0.1mm`, `PressFit=0.05mm`).
-  - **Structural:** Strength (`Wall=2.4mm`, `RibThick=1.6mm`).
+- **Factory Loaded:** "3DP Tolerances (Global)" - A single master preset containing standard keys for every fit type:
+  - `Tol_Press` (0.10mm), `Tol_Snug` (0.15mm), `Tol_Slide` (0.25mm), `Tol_Loose` (0.40mm).
+  - `Tol_Hole` (0.20mm) and `Tol_Thread` (0.20mm).
 - **Save Template:** Configure your standard variables (e.g., `Thickness`, `Kerf`, `Clearance`) once. Save as "Laser Cut Acrylic".
 - **Instant Load:** Select the preset from the dropdown. ZenParams **previews** the values in the table. Click **Load** to apply them all at once.
 - **Auto-Activation:** Saving a new template automatically applies it and sets it as the "Active" preset for the current design.

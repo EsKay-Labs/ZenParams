@@ -27,25 +27,16 @@ PALETTE_URL = './ui/index.html'
 # -----------------------------------------------------------------------------
 
 def get_presets():
-    """Returns built-in factory presets (3D Printing Design Specs)."""
+    """Returns built-in factory presets (3D Printing Optimized)."""
     return {
-        "3DP Standard": {
-            "WallThick": "1.2 mm", 
-            "Clearance": "0.2 mm",
-            "HoleComp": "0.15 mm",
-            "FilletSm": "1 mm"
-        },
-        "3DP Precision": {
-            "WallThick": "0.8 mm", 
-            "Clearance": "0.1 mm", 
-            "HoleComp": "0.1 mm",
-            "PressFit": "0.05 mm"
-        },
-        "3DP Structural": {
-            "WallThick": "2.4 mm", 
-            "Clearance": "0.35 mm",
-            "RibThick": "1.6 mm",
-            "MinFeature": "0.8 mm"
+        "3DP Tolerances (Global)": {
+            "Tol_Press": "0.10 mm",   # Permanent Fit (Bearings/Magnets)
+            "Tol_Snug": "0.15 mm",   # Friction Fit (Lids/Snaps)
+            "Tol_Slide": "0.25 mm",  # Moving Parts (Slides/Hinges)
+            "Tol_Loose": "0.40 mm",  # Easy Fit (Drop-in)
+            "Tol_Thread": "0.20 mm", # 3D Printed Threads
+            "Tol_Hole": "0.20 mm",   # Vertical Hole Compensation
+            "WallThick": "1.2 mm"    # Standard Reference (3 Walls)
         }
     }
 
