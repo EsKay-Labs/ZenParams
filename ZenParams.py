@@ -730,14 +730,12 @@ class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
             
             self.log_to_console(f"Sending Payload [{status}] Len: {len(data)}")
             
-            # sendInfoToHTML is BROKEN - use file bridge instead
-            bridge_file = os.path.join(APP_PATH, 'ui', 'data_bridge.json')
+            # Use Fusion's native HTML communication
             try:
-                with open(bridge_file, 'w') as f:
-                    f.write(data)
-                self.log_to_console(f"Data written to bridge file")
+                palette.sendInfoToHTML('response', data)
+                self.log_to_console(f"Sent via sendInfoToHTML")
             except Exception as e:
-                self.log_to_console(f"Bridge file error: {e}")
+                self.log_to_console(f"sendInfoToHTML error: {e}")
 
     def log_to_console(self, msg):
         """Writes to the Fusion 360 Text Commands palette."""
