@@ -629,13 +629,30 @@ class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
                         break
         except:
             pass
+
+        # Legacy Detection (No ZenPreset but has params)
+        has_legacy_params = False
+        if not current_preset:
+             try:
+                 app = adsk.core.Application.get()
+                 design = adsk.fusion.Design.cast(app.activeProduct)
+                 if design and design.userParameters.count > 0:
+                     # Filter out our own param if it exists but is empty
+                     real_len = 0
+                     for p in design.userParameters:
+                         if p.name != '_zen_current_preset':
+                             real_len += 1
+                     if real_len > 0:
+                         has_legacy_params = True
+             except: pass
         
         # 5. Build payload
         payload = {
             'content': {
                 'presets': all_presets,
                 'params': param_data,
-                'current_preset': current_preset
+                'current_preset': current_preset,
+                'legacy_params': has_legacy_params
             },
             'type': 'init_all'
         }

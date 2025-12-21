@@ -252,6 +252,45 @@
         </button>
       </div>
 
+      <!-- Legacy Import Notice (Hidden by default) -->
+      <div
+        id="legacy-notice"
+        style="
+          display: none;
+          background: #2d2d2d;
+          border: 1px solid #1e4e6e;
+          padding: 8px;
+          margin-bottom: 10px;
+          border-radius: 4px;
+        "
+      >
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <span style="color: #6ec3ff; font-size: 11px"
+            >Found existing parameters.</span
+          >
+          <button
+            id="import-legacy-btn"
+            style="
+              background: #0e639c;
+              color: white;
+              border: none;
+              border-radius: 3px;
+              padding: 4px 8px;
+              cursor: pointer;
+              font-size: 11px;
+            "
+          >
+            ⬇️ Import as Preset
+          </button>
+        </div>
+      </div>
+
       <!-- Preset Controls - All in One Row -->
       <div class="preset-bar">
         <select id="preset-select">

@@ -1,13 +1,7 @@
 {
-    "wewew": {
-        "sqssq": "10mm",
+    "newnew": {
         "layer_height": "0.2 mm",
-        "press_fit_offset": "0.1 mm",
-        "clearance": "0.25 mm"
-    },
-    "tetetet": {
-        "clearance": "0.25 mm",
-        "press_fit_offset": "0.1 mm",
-        "layer_height": "0.2 mm"
+        "sliding_gap": "0.5 mm",
+        "clearance": "0.4 mm"
     }
 }

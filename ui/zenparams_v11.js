@@ -181,6 +181,16 @@ function requestData() {
                   document.getElementById("preset-select").value =
                     parsed.content.current_preset;
                 }
+
+                // LEGACY IMPORT NOTICE
+                var legacyNotice = document.getElementById("legacy-notice");
+                if (legacyNotice) {
+                  if (parsed.content.legacy_params === true) {
+                    legacyNotice.style.display = "block";
+                  } else {
+                    legacyNotice.style.display = "none";
+                  }
+                }
               }
             } catch (parseErr) {
               setStatus("Parse error", "error");
@@ -386,6 +396,14 @@ document.addEventListener("DOMContentLoaded", function () {
       updateCurrentPreset(null);
       setStatus("Deleted: " + selected, "success");
       setTimeout(requestData, 500);
+    };
+  }
+
+  // Legacy Import Button
+  var importLegacyBtn = document.getElementById("import-legacy-btn");
+  if (importLegacyBtn && saveBtn) {
+    importLegacyBtn.onclick = function () {
+      saveBtn.click();
     };
   }
 
