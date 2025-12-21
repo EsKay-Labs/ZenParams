@@ -502,7 +502,6 @@ def run(context):
         cmd_def = _ui.commandDefinitions.addButtonDefinition(
             CMD_ID, 'ZenParams Pro', 'Open ZenParams Palette', './resources'
         )
-        cmd_def.shortcut = 'Ctrl+P'
         
         on_created = CommandCreatedHandler()
         cmd_def.commandCreated.add(on_created)

@@ -74,9 +74,17 @@ ZenParams is smart. It won't let you delete a parameter that's currently holding
 
 ## ⌨️ PRO TIPS (Keyboard First)
 
+- **ENABLE SHORTCUTS**: Fusion 360 requires you to set user shortcuts manually (security rules).
+
+  1.  Go to **Modify Panel** (Solid Tab).
+  2.  Hover over the **ZenParams Pro** icon.
+  3.  Click the **3 Dots** -> **Change Keyboard Shortcut**.
+  4.  Press **`Ctrl+P`** (or `Command+P`).
+  5.  Now `Ctrl+P` will **Toggle** the script (Open AND Hide).
+
 - **RAPID ENTRY**: Type `Name` -> `Tab` -> `Value` -> `Tab` -> `Comment` -> **`Enter`**.
   - **`Enter`** instantly **saves** the parameter to Fusion and creates a new row. You can define 10 parameters in 30 seconds.
-- **INSTANT HIDE**: Press **`Esc`** at any time to instantly hide the palette. Simply click the **ZenParams Pro** icon in the **Modify** menu to bring it back exactly where you left it.
+- **INSTANT HIDE**: Press **`Esc`** at any time to instantly hide the palette. Simply press your shortcut (`Ctrl+P`) to bring it back instantly.
 
 ---
 
