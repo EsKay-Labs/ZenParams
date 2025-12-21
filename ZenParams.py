@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import json
+import re
 
 # Ensure local lib directory is in path (Kept for future proofing, though lib is gone)
 APP_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -210,6 +211,23 @@ class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
             if not param:
                 args.returnData = json.dumps({'status': 'success', 'msg': 'Already deleted'})
                 return
+            
+            # Check Parameter-to-Parameter Dependencies
+            used_by = []
+            for p in design.userParameters:
+                if p.name == param_name: continue
+                # Simple check: name in expression. Risk: substring match (e.g. 'a' in 'apple').
+                # Robust: Check boundaries? Fusion names are [a-zA-Z_0-9].
+                # Quick fix: check if name is present.
+                if re.search(rf"\b{re.escape(param_name)}\b", p.expression):
+                    used_by.append(p.name)
+            
+            if used_by:
+                 args.returnData = json.dumps({
+                    'status': 'error', 
+                    'msg': f"Used by: {', '.join(used_by[:3])}" + ("..." if len(used_by)>3 else "")
+                })
+                 return
             
             # Attempt Delete
             param.deleteMe()
