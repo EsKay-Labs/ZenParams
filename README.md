@@ -29,17 +29,16 @@ Save your _entire_ parameter list as a Preset.
 - Working on a PLA project? **CLICK.** Boom, all your PLA tolerances are loaded.
 - Switching to CNC Aluminum? **CLICK.** Boom, your machining allowances are set.
 
-### 2. ↕️ FLEXIBLE UI (NEW)
+### 2. ↕️ FLEXIBLE UI
 
-- **Resizable Columns**: Hover between column headers to drag and resize them to your liking.
-- **Narrow Mode**: The palette is now sleek and compact by default, giving you more screen real estate.
+- **Narrow Mode**: Compact by default.
+- **Excel-Style Editing**: Single click to select. **Double Click** (or `Enter`) to edit. No more accidental changes.
+- **Resizable Columns**: Drag headers to adjust.
 
-### 3. 🔄 SEAMLESS SYNC (NEW)
+### 3. 🔄 SEAMLESS SYNC
 
-No more "Apply" buttons.
-
-- **Auto-Save**: Changes are sent to Fusion instantly when you finish typing (Tab or Click away).
-- **Real-Time**: Your design updates as you work.
+- **Auto-Lock**: Fields automatically lock and Sync to Fusion when you are done typing.
+- **Rapid Entry**: New parameters start editable for speed, then lock down for safety.
 
 ### 4. 🧠 DEPENDENCY CHECKS
 
@@ -61,11 +60,10 @@ ZenParams is smart. It won't let you delete a parameter that's currently holding
 
 ## 🎮 HOW TO USE
 
-1.  **Open the Palette**: You'll find the **ZenParams Pro** icon in your **Modify** panel (Design > Solid > Modify). It's also in the **Modify** dropdown menu.
-2.  **Load a Preset**: Click "3DP Tolerances (Global)" to load the built-in magic.
-3.  **Customize**: Edit values in the table.
-4.  **Save Your Own**: Click "Save Preset", name it (e.g., "PETG Master"), and feel the power.
-5.  **Apply**: Just select a preset and your current design is instantly populated.
+1.  **Open the Palette**: **Modify** panel > **ZenParams Pro**.
+2.  **Load/Use**: Click a preset or add new params.
+3.  **Edit**: Double Click any cell to change it. Press Enter or Click away to save.
+4.  **Save Template**: Save your config for later.
 
 ---
 
@@ -78,9 +76,9 @@ ZenParams is smart. It won't let you delete a parameter that's currently holding
   3.  Press **`Ctrl+P`**. Now it toggles Open/Hide!
 
 - **RAPID ENTRY**: Type `Name` -> `Tab` -> `Value` -> `Tab` -> `Comment`.
-  - **`Enter` (Once)**: Saves the value. Stays on row.
+  - **`Enter` (Once)**: Saves the value. Locks row.
   - **`Enter` (Twice)**: Adds a new row.
-- **INSTANT HIDE**: Press **`Esc`** at any time to instantly hide the palette.
+- **INSTANT HIDE**: Press **`Esc`** to hide.
 
 ---
 
