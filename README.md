@@ -82,8 +82,9 @@ ZenParams is smart. It won't let you delete a parameter that's currently holding
   4.  Press **`Ctrl+P`** (or `Command+P`).
   5.  Now `Ctrl+P` will **Toggle** the script (Open AND Hide).
 
-- **RAPID ENTRY**: Type `Name` -> `Tab` -> `Value` -> `Tab` -> `Comment` -> **`Enter`**.
-  - **`Enter`** instantly **saves** the parameter to Fusion and creates a new row. You can define 10 parameters in 30 seconds.
+- **RAPID ENTRY**: Type `Name` -> `Tab` -> `Value` -> `Tab` -> `Comment`.
+  - **`Enter` (Once)**: Saves the value instantly. Stays on the row so you can edit more.
+  - **`Enter` (Twice)**: Adds a new row and jumps to it.
 - **INSTANT HIDE**: Press **`Esc`** at any time to instantly hide the palette. Simply press your shortcut (`Ctrl+P`) to bring it back instantly.
 
 ---
