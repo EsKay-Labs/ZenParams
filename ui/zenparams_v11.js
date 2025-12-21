@@ -1,37 +1,5 @@
-// ZenParams v11 - MINIMAL DEBUG VERSION
+// ZenParams v11 - SYNC RESPONSE VERSION
 console.log("[ZP] Script loading...");
-
-// Global response handler - MUST be defined before DOMContentLoaded
-window.response = function (incoming) {
-  console.log("[ZP] response() called!", incoming);
-  try {
-    var statusEl = document.getElementById("status-bar");
-    if (statusEl) statusEl.textContent = "GOT DATA!";
-
-    // Parse the data
-    var data = incoming;
-    if (incoming && incoming.data) {
-      data = incoming.data;
-    }
-
-    console.log("[ZP] Raw data:", data);
-    var parsed = JSON.parse(data);
-    console.log("[ZP] Parsed:", parsed);
-
-    if (
-      parsed.type === "init_all" &&
-      parsed.content &&
-      parsed.content.presets
-    ) {
-      console.log("[ZP] Got presets:", parsed.content.presets);
-      fillPresets(parsed.content.presets);
-    }
-  } catch (err) {
-    console.log("[ZP] Error in response:", err);
-    var statusEl = document.getElementById("status-bar");
-    if (statusEl) statusEl.textContent = "Error: " + err.message;
-  }
-};
 
 // Simple preset filler
 function fillPresets(presets) {
@@ -50,16 +18,41 @@ function fillPresets(presets) {
   if (statusEl) statusEl.textContent = "Presets loaded!";
 }
 
-// Request data from Python
+// Request data from Python - SYNC VERSION
 function requestData() {
-  console.log("[ZP] Requesting initial data...");
+  console.log("[ZP] Requesting initial data (SYNC)...");
+  var statusEl = document.getElementById("status-bar");
   try {
-    adsk.fusionSendData(
+    // fusionSendData returns the response synchronously via args.returnData
+    var response = adsk.fusionSendData(
       "send",
       JSON.stringify({ action: "get_initial_data", data: {} })
     );
+    console.log("[ZP] Got SYNC response:", response);
+
+    if (response) {
+      // Response should be a JSON string
+      var parsed = JSON.parse(response);
+      console.log("[ZP] Parsed response:", parsed);
+
+      if (
+        parsed.type === "init_all" &&
+        parsed.content &&
+        parsed.content.presets
+      ) {
+        fillPresets(parsed.content.presets);
+        if (statusEl) statusEl.textContent = "Presets loaded!";
+      } else {
+        if (statusEl) statusEl.textContent = "Invalid response format";
+      }
+    } else {
+      console.log("[ZP] No response from fusionSendData");
+      if (statusEl) statusEl.textContent = "No response - retrying...";
+      setTimeout(requestData, 1000);
+    }
   } catch (e) {
     console.log("[ZP] fusionSendData failed:", e);
+    if (statusEl) statusEl.textContent = "Error: " + e.message;
   }
 }
 
@@ -72,11 +65,5 @@ document.addEventListener("DOMContentLoaded", function () {
   // Request data after short delay
   setTimeout(requestData, 500);
 });
-
-// Also try registering handler with eventHandlers
-if (typeof adsk !== "undefined" && adsk.eventHandlers) {
-  adsk.eventHandlers["response"] = window.response;
-  console.log("[ZP] Registered with eventHandlers");
-}
 
 console.log("[ZP] Script fully loaded");

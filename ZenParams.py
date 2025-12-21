@@ -331,8 +331,11 @@ class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
             elif action == 'create_param':
                 self.handle_create_param(data)
             elif action == 'get_initial_data':
-                self.log_to_console("Processing get_initial_data...")
-                self.send_initial_data()
+                self.log_to_console("Processing get_initial_data (SYNC)...")
+                # Use args.returnData for synchronous response
+                response_data = self.build_initial_data()
+                args.returnData = response_data
+                self.log_to_console(f"Returned SYNC data len: {len(response_data)}")
             elif action == 'batch_update':
                 self.handle_batch_update(data)
             elif action == 'save_preset':
@@ -610,6 +613,49 @@ class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
         
         self.log_to_console(f"Sending ATOMIC Payload. Presets: {len(all_presets)} Params: {len(param_data)}")
         self.send_response(payload, 'init_all')
+
+    def build_initial_data(self):
+        """Builds and returns the initial data JSON string for sync response."""
+        # 1. Factory Presets
+        all_presets = get_presets().copy()
+        
+        # 2. User Presets
+        json_path = os.path.join(APP_PATH, 'user_presets.json')
+        if os.path.exists(json_path):
+            try:
+                with open(json_path, 'r') as f:
+                    user_presets = json.load(f)
+                    all_presets.update(user_presets)
+            except:
+                pass
+        
+        # 3. Get params
+        param_data = self.get_param_list()
+        
+        # 4. Current preset detection
+        current_preset = None
+        try:
+            app = adsk.core.Application.get()
+            design = adsk.fusion.Design.cast(app.activeProduct)
+            if design:
+                for param in design.userParameters:
+                    if param.name == '_zen_current_preset':
+                        current_preset = param.comment
+                        break
+        except:
+            pass
+        
+        # 5. Build payload
+        payload = {
+            'content': {
+                'presets': all_presets,
+                'params': param_data,
+                'current_preset': current_preset
+            },
+            'type': 'init_all'
+        }
+        
+        return json.dumps(payload)
 
     def get_param_list(self):
         """Helper to get param list without sending it."""
