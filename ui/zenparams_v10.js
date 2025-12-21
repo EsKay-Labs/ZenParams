@@ -60,6 +60,24 @@ document.addEventListener("DOMContentLoaded", () => {
   // IMMEDIATE LOAD PROOF
   status.textContent = "v10.1 Active";
 
+  // STARTUP BRIDGE POLL: Catch data written before JS was ready
+  function pollBridgeFile() {
+    fetch("data_bridge.json?t=" + Date.now())
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && data.type === "init_all" && data.content) {
+          window.response({ data: JSON.stringify(data) });
+          status.textContent = "Loaded from bridge.";
+        }
+      })
+      .catch(() => {
+        // File doesn't exist or empty, retry in 500ms
+        setTimeout(pollBridgeFile, 500);
+      });
+  }
+  // Start polling after a short delay
+  setTimeout(pollBridgeFile, 300);
+
   const presetSelect = document.getElementById("preset-select");
   const loadPresetBtn = document.getElementById("load-preset-btn");
   const deletePresetBtn = document.getElementById("delete-preset-btn");
