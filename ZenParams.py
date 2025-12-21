@@ -98,7 +98,11 @@ def run(context):
             if not palette.isVisible:
                  show_palette()
             # FIRST DOC FIX: Send initial data for the already-open document
+            # Add small delay to allow HTML page to fully load
             try:
+                import time
+                time.sleep(0.5)  # Wait 500ms for HTML to initialize
+                adsk.doEvents()  # Process any pending events
                 on_html_event.send_initial_data()
             except:
                 pass
@@ -245,37 +249,37 @@ class DocumentActivatedHandler(adsk.core.DocumentEventHandler):
             app = adsk.core.Application.get()
             design = adsk.fusion.Design.cast(app.activeProduct)
             current_doc_name = ""
+            current_doc_id = ""
             param_count = 0
             
             if design and design.parentDocument:
                 current_doc_name = design.parentDocument.name
                 try:
+                    # Use creationId for unique identification (or hash the object as fallback)
+                    current_doc_id = design.parentDocument.creationId
+                except:
+                    try:
+                        # Fallback: use object id (memory address)
+                        current_doc_id = str(id(design.parentDocument))
+                    except:
+                        current_doc_id = current_doc_name  # Last resort
+                try:
                     param_count = design.userParameters.count
                 except: pass
             
-            log_diag(f"[DIAG] DocActivated: '{current_doc_name}' Count={param_count} Last: '{_last_active_doc_name}'")
+            log_diag(f"[DIAG] DocActivated: '{current_doc_name}' ID={current_doc_id[:8] if current_doc_id else 'None'}... Count={param_count} Last: '{_last_active_doc_name}'")
             
-            # Debounce: If document hasn't changed, ignore this event
-            if _last_active_doc_name == current_doc_name:
+            # Debounce: If document ID hasn't changed, ignore this event
+            # Using ID instead of name because multiple docs can be named "Untitled"
+            if _last_active_doc_name == current_doc_id:
                 log_diag(f"[DIAG] Debounce BLOCKED refresh.")
                 return
                 
-            _last_active_doc_name = current_doc_name
+            _last_active_doc_name = current_doc_id
              
-            # GHOST PROTECTION: If count is 0 AND bridge file has valid data, DON'T overwrite
-            if param_count == 0:
-                try:
-                    bridge_path = os.path.join(APP_PATH, 'ui', 'data_bridge.json')
-                    if os.path.exists(bridge_path):
-                        with open(bridge_path, 'r') as f:
-                            content = f.read()
-                            # If file has substantial content (more than empty payload), don't wipe it
-                            if len(content) > 700:  # Empty payload is ~592 bytes
-                                log_diag("[GHOST PROTECTION] Blocked DocumentActivated with count=0!")
-                                return
-                except:
-                    pass
-                    
+            # Document has changed - refresh the UI
+            # Ghost Protection removed here - legitimate empty docs need to refresh
+            # The protection in send_initial_data handles the edge cases
             temp_handler = MyHTMLEventHandler()
             temp_handler.send_initial_data()
         except:
