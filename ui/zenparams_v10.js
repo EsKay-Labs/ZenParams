@@ -84,11 +84,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const delRowBtn = document.getElementById("del-row-btn");
   const savePresetBtn = document.getElementById("save-preset-btn");
   const selectAllCb = document.getElementById("select-all");
+  const createNewBtn = document.getElementById("create-new-btn");
 
   let GLOBAL_PRESETS = {};
   let GLOBAL_PARAMS = [];
   let LAST_SAVED_PRESET = null; // Track last saved preset to auto-select
   let CURRENT_PRESET = null; // Track currently loaded preset
+  let CREATING_PRESET_NAME = null; // Track if we're in creation mode
 
   // SYSTEM PRESETS (Hardcoded Names to Protect)
   const SYSTEM_PRESETS = [
@@ -97,10 +99,31 @@ document.addEventListener("DOMContentLoaded", () => {
     "3D Print (Loose Fit)",
   ];
 
+  // CREATE NEW PRESET WIZARD
+  createNewBtn.addEventListener("click", () => {
+    const name = prompt("Enter a name for your new preset:", "my_preset");
+    if (!name) return; // Cancelled
+
+    // Check if name conflicts with system presets
+    if (SYSTEM_PRESETS.includes(name)) {
+      setStatus("Cannot use system preset names.", "error");
+      return;
+    }
+
+    // Enter creation mode
+    CREATING_PRESET_NAME = name;
+    renderTable([]); // Clear the table
+    addNewRow(); // Add one starter row
+    updateCurrentPreset("Creating: " + name);
+    setStatus("Add your parameters, then click Save Template.", "info");
+  });
+
   // Add Row Method
   addRowBtn.addEventListener("click", () => {
     addNewRow();
-    updateCurrentPreset(null); // Clear current preset on manual add
+    if (!CREATING_PRESET_NAME) {
+      updateCurrentPreset(null); // Clear current preset on manual add (unless creating)
+    }
   });
 
   // Save Template Method
@@ -114,8 +137,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 2. Prompt Name
-    const name = prompt("Name your Custom Preset:", "new_preset_name");
+    // 2. Get Name (use CREATING_PRESET_NAME if set, otherwise prompt)
+    let name = CREATING_PRESET_NAME;
+    if (!name) {
+      name = prompt("Name your Custom Preset:", "new_preset_name");
+    }
     if (!name) return; // Cancelled
 
     // Protection: Don't allow system preset names (silent)
@@ -135,6 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 4. Send to Backend
     LAST_SAVED_PRESET = name; // Store for auto-selection after backend confirms
+    CREATING_PRESET_NAME = null; // Clear creation mode
     sendToFusion("save_preset", {
       name: name,
       params: paramsDict,
