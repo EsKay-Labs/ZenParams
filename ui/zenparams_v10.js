@@ -157,7 +157,19 @@ document.addEventListener("DOMContentLoaded", () => {
       setStatus(`System presets are protected.`, "error");
       return;
     }
-    if (!confirm(`Delete "${selectedName}"?`)) return;
+    // Protection: Check if it's a user preset (not just "current")
+    // User presets have data in GLOBAL_PRESETS that's not from system
+    const isUserPreset =
+      GLOBAL_PRESETS[selectedName] &&
+      !SYSTEM_PRESETS.includes(selectedName) &&
+      selectedName !== "New Preset";
+    if (!isUserPreset) {
+      setStatus("Only saved custom presets can be deleted.", "error");
+      return;
+    }
+
+    // Use simple confirm without special characters
+    if (!confirm("Delete preset: " + selectedName + "?")) return;
 
     sendToFusion("delete_preset", { name: selectedName });
 

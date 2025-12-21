@@ -1,8 +1,1 @@
-{
-    "mypres": {
-        "press_fit_offset": "0.05 mm",
-        "hole_compensation": "0.15 mm",
-        "clearance": "0.1 mm",
-        "width": "10 mm"
-    }
-}
+{}
