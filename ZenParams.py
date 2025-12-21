@@ -343,11 +343,49 @@ class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
             elif action == 'set_current_preset':
                 self.log_to_console("Processing set_current_preset...")
                 self.handle_set_current_preset(data)
+            elif action == 'delete_param':
+                self.log_to_console(f"Processing delete_param: {data.get('name')}")
+                # Pass args for returnData
+                self.handle_delete_param(data, args)
             elif action == 'refresh':
                 self.send_all_params()
                 
         except:
             _ui.messageBox('Failed handling HTML event:\n{}'.format(traceback.format_exc()))
+
+    def handle_delete_param(self, data, args):
+        """Deletes a single user parameter with dependency check."""
+        param_name = data.get('name')
+        if not param_name:
+            args.returnData = json.dumps({'status': 'error', 'msg': 'No name'})
+            return
+
+        try:
+            app = adsk.core.Application.get()
+            design = adsk.fusion.Design.cast(app.activeProduct)
+            if not design: 
+                args.returnData = json.dumps({'status': 'error', 'msg': 'No design'})
+                return
+            
+            param = design.userParameters.itemByName(param_name)
+            if not param:
+                # Already gone? Success.
+                args.returnData = json.dumps({'status': 'success', 'msg': 'Already deleted'})
+                return
+            
+            # API dependency check is implicit: deleteMe throws if used
+            param.deleteMe()
+            
+            args.returnData = json.dumps({'status': 'success', 'msg': f"Deleted {param_name}"})
+            
+        except Exception as e:
+            msg = str(e)
+            if "dependency" in msg.lower() or "refer" in msg.lower():
+                final_msg = f"Cannot delete '{param_name}': Used in design."
+            else:
+                final_msg = f"Delete failed: {msg}"
+            
+            args.returnData = json.dumps({'status': 'error', 'msg': final_msg})
 
     def handle_batch_update(self, updates):
         """Handles bulk updates from the UI table."""

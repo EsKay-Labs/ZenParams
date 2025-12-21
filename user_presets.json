@@ -3,5 +3,8 @@
         "layer_height": "0.2 mm",
         "sliding_gap": "0.5 mm",
         "clearance": "0.4 mm"
+    },
+    "my_preset": {
+        "test_width": "4 mm"
     }
 }

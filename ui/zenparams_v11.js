@@ -75,14 +75,56 @@ function fillTable(params) {
 
   // Attach delete handlers
   attachDeleteHandlers();
+  attachEnterHandlers();
 }
 
-function attachDeleteHandlers() {
-  var btns = document.querySelectorAll(".row-delete");
+function attachDeleteHandlers(context) {
+  var btns = (context || document).querySelectorAll(".row-delete");
   btns.forEach(function (btn) {
     btn.onclick = function () {
-      btn.closest("tr").remove();
-      setStatus("Row removed.", "info");
+      var tr = btn.closest("tr");
+      var nameInput = tr.querySelector(".name");
+      var name = nameInput ? nameInput.value : "";
+      var isUser = tr.dataset.user === "true";
+
+      if (isUser && name && name !== "new_param") {
+        // Attempt Fusion Deletion
+        if (!confirm("Delete parameter '" + name + "' from Fusion design?"))
+          return;
+
+        setStatus("Deleting...", "info");
+        sendToFusion("delete_param", { name: name }).then(function (resp) {
+          try {
+            var r = JSON.parse(resp);
+            if (r.status === "success") {
+              tr.remove();
+              setStatus(r.msg, "success");
+            } else {
+              setStatus(r.msg, "error");
+              alert(r.msg);
+            }
+          } catch (e) {
+            setStatus("Err: " + e, "error");
+          }
+        });
+      } else {
+        // Local delete
+        tr.remove();
+        setStatus("Row removed.", "info");
+      }
+    };
+  });
+}
+
+function attachEnterHandlers(context) {
+  var inputs = (context || document).querySelectorAll(".tbl-input.comment"); // Only on Last field? Or all?
+  // Better on all inputs in the row
+  var allInputs = (context || document).querySelectorAll(".tbl-input");
+  allInputs.forEach(function (inp) {
+    inp.onkeydown = function (e) {
+      if (e.key === "Enter") {
+        addNewRow();
+      }
     };
   });
 }
@@ -102,12 +144,12 @@ function addNewRow() {
     '<td><input type="text" class="tbl-input comment" value=""></td>' +
     '<td><button class="row-delete" title="Delete">×</button></td>';
   tbody.insertBefore(tr, tbody.firstChild);
-  tr.querySelector(".name").select();
 
-  tr.querySelector(".row-delete").onclick = function () {
-    tr.remove();
-    setStatus("Row removed.", "info");
-  };
+  // Attach Handlers to this row only
+  attachDeleteHandlers(tr);
+  attachEnterHandlers(tr);
+
+  tr.querySelector(".name").select();
 }
 
 function gatherTableData() {
@@ -131,9 +173,13 @@ function gatherTableData() {
 
 function sendToFusion(action, data) {
   try {
-    adsk.fusionSendData("send", JSON.stringify({ action: action, data: data }));
+    return adsk.fusionSendData(
+      "send",
+      JSON.stringify({ action: action, data: data })
+    );
   } catch (e) {
     console.log("[ZP] Send failed:", e);
+    return Promise.reject(e);
   }
 }
 
