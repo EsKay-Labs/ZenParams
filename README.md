@@ -28,21 +28,18 @@ Save your _entire_ parameter list as a Preset.
 
 - Working on a PLA project? **CLICK.** Boom, all your PLA tolerances are loaded.
 - Switching to CNC Aluminum? **CLICK.** Boom, your machining allowances are set.
-- **It’s like Copy-Paste for your entire brain.**
 
-### 2. 🖨️ 3D PRINTING "GOD MODE" (Built-In)
+### 2. ↕️ FLEXIBLE UI (NEW)
 
-We included the **Holy Grail** of 3D printing tolerances right out of the box. Stop guessing.
+- **Resizable Columns**: Hover between column headers to drag and resize them to your liking.
+- **Narrow Mode**: The palette is now sleek and compact by default, giving you more screen real estate.
 
-- `Tol_Press` (0.10mm): For bearings that never move.
-- `Tol_Snug` (0.15mm): For satisfying "click" fits.
-- `Tol_Slide` (0.25mm): For buttery smooth hinges.
-- `Tol_Loose` (0.40mm): For when you just don't care.
+### 3. 🔄 SEAMLESS SYNC (NEW)
 
-### 3. ⚡ BATCH BLASTING
+No more "Apply" buttons.
 
-Need to update 50 parameters? Change names? Delete the old ones?
-Do it in **bulk**. Our UI handles the heavy lifting while you sip coffee.
+- **Auto-Save**: Changes are sent to Fusion instantly when you finish typing (Tab or Click away).
+- **Real-Time**: Your design updates as you work.
 
 ### 4. 🧠 DEPENDENCY CHECKS
 
@@ -74,36 +71,19 @@ ZenParams is smart. It won't let you delete a parameter that's currently holding
 
 ## ⌨️ PRO TIPS (Keyboard First)
 
-- **ENABLE SHORTCUTS**: Fusion 360 requires you to set user shortcuts manually (security rules).
+- **ENABLE SHORTCUTS**: Fusion 360 requires you to set user shortcuts manually.
 
-  1.  Go to **Modify Panel** (Solid Tab).
-  2.  Hover over the **ZenParams Pro** icon.
-  3.  Click the **3 Dots** -> **Change Keyboard Shortcut**.
-  4.  Press **`Ctrl+P`** (or `Command+P`).
-  5.  Now `Ctrl+P` will **Toggle** the script (Open AND Hide).
+  1.  Go to **Modify Panel**.
+  2.  Hover over **ZenParams Pro** -> **3 Dots** -> **Change Keyboard Shortcut**.
+  3.  Press **`Ctrl+P`**. Now it toggles Open/Hide!
 
 - **RAPID ENTRY**: Type `Name` -> `Tab` -> `Value` -> `Tab` -> `Comment`.
-  - **`Enter` (Once)**: Saves the value instantly. Stays on the row so you can edit more.
-  - **`Enter` (Twice)**: Adds a new row and jumps to it.
-- **INSTANT HIDE**: Press **`Esc`** at any time to instantly hide the palette. Simply press your shortcut (`Ctrl+P`) to bring it back instantly.
+  - **`Enter` (Once)**: Saves the value. Stays on row.
+  - **`Enter` (Twice)**: Adds a new row.
+- **INSTANT HIDE**: Press **`Esc`** at any time to instantly hide the palette.
 
 ---
 
-## 🏆 CREDITS
+### 💬 FEEDBACK & LICENSE
 
-Built for the **Builders**, the **Makers**, and the **Engineers** who value their time.
-
-- **Core Logic**: Python 3.x
-- **UI**: HTML5/JS (Chrome Engine)
-- **Vibe**: Unstoppable
-
----
-
-### 💬 FEEDBACK
-
-Found a bug? Want to request a feature?
-**Don't keep it to yourself.** Open an issue. We eat bugs for breakfast.
-
-### 📄 LICENSE
-
-**MIT**. Open Source. Free forever. Go build something awesome.
+Built for **Builders**. **MIT License**. Free forever.
