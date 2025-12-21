@@ -1,4 +1,4 @@
-// ZenParams v11 - SYNC RESPONSE VERSION
+// ZenParams v11 - PROMISE-BASED VERSION
 console.log("[ZP] Script loading...");
 
 // Simple preset filler
@@ -18,37 +18,55 @@ function fillPresets(presets) {
   if (statusEl) statusEl.textContent = "Presets loaded!";
 }
 
-// Request data from Python - SYNC VERSION
+// Request data from Python - PROMISE VERSION
 function requestData() {
-  console.log("[ZP] Requesting initial data (SYNC)...");
+  console.log("[ZP] Requesting initial data...");
   var statusEl = document.getElementById("status-bar");
   try {
-    // fusionSendData returns the response synchronously via args.returnData
-    var response = adsk.fusionSendData(
+    // fusionSendData returns a Promise
+    var promise = adsk.fusionSendData(
       "send",
       JSON.stringify({ action: "get_initial_data", data: {} })
     );
-    console.log("[ZP] Got SYNC response:", response);
 
-    if (response) {
-      // Response should be a JSON string
-      var parsed = JSON.parse(response);
-      console.log("[ZP] Parsed response:", parsed);
+    if (promise && promise.then) {
+      promise
+        .then(function (response) {
+          console.log("[ZP] Promise resolved:", response);
 
-      if (
-        parsed.type === "init_all" &&
-        parsed.content &&
-        parsed.content.presets
-      ) {
-        fillPresets(parsed.content.presets);
-        if (statusEl) statusEl.textContent = "Presets loaded!";
-      } else {
-        if (statusEl) statusEl.textContent = "Invalid response format";
-      }
+          if (response) {
+            try {
+              var parsed = JSON.parse(response);
+              console.log("[ZP] Parsed response:", parsed);
+
+              if (
+                parsed.type === "init_all" &&
+                parsed.content &&
+                parsed.content.presets
+              ) {
+                fillPresets(parsed.content.presets);
+              } else {
+                if (statusEl) statusEl.textContent = "Invalid format";
+              }
+            } catch (parseErr) {
+              console.log("[ZP] Parse error:", parseErr);
+              if (statusEl)
+                statusEl.textContent = "Parse error: " + parseErr.message;
+            }
+          } else {
+            console.log("[ZP] Empty response");
+            if (statusEl) statusEl.textContent = "Empty response - retrying...";
+            setTimeout(requestData, 1000);
+          }
+        })
+        .catch(function (err) {
+          console.log("[ZP] Promise error:", err);
+          if (statusEl) statusEl.textContent = "Promise error";
+        });
     } else {
-      console.log("[ZP] No response from fusionSendData");
-      if (statusEl) statusEl.textContent = "No response - retrying...";
-      setTimeout(requestData, 1000);
+      // Not a promise, try direct
+      console.log("[ZP] Not a promise, raw:", promise);
+      if (statusEl) statusEl.textContent = "Direct response: " + typeof promise;
     }
   } catch (e) {
     console.log("[ZP] fusionSendData failed:", e);
