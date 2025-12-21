@@ -40,16 +40,16 @@ function fillTable(params) {
     if (p.isUser) {
       tr.dataset.user = "true";
       tr.innerHTML =
-        '<td><input type="text" class="tbl-input name" value="' +
+        '<td><input type="text" readonly class="tbl-input name" value="' +
         p.name +
         '"></td>' +
-        '<td><input type="text" class="tbl-input expr" value="' +
+        '<td><input type="text" readonly class="tbl-input expr" value="' +
         p.expression +
         '"></td>' +
         '<td style="font-size:11px; color:#666;">' +
         (p.unit || "") +
         "</td>" +
-        '<td><input type="text" class="tbl-input comment" value="' +
+        '<td><input type="text" readonly class="tbl-input comment" value="' +
         (p.comment || "") +
         '"></td>' +
         '<td><button class="row-delete" title="Delete">×</button></td>';
@@ -134,17 +134,36 @@ var lastEnterRow = null;
 function attachEnterHandlers(context) {
   var allInputs = (context || document).querySelectorAll(".tbl-input");
   allInputs.forEach(function (inp) {
-    // Auto-Sync on Change (Seamless Save)
+    // Auto-Sync on Change (Seamless Save) and Lock on Blur
     inp.onchange = function () {
       var changes = gatherTableData();
       sendToFusion("batch_update", { items: changes, suppress_refresh: true });
       setStatus("Synced.", "success");
     };
 
+    inp.onblur = function () {
+      inp.readOnly = true;
+    };
+
+    // Unlock on Double Click
+    inp.ondblclick = function () {
+      inp.readOnly = false;
+      inp.select();
+      inp.focus();
+    };
+
     inp.onkeydown = function (e) {
       if (e.key === "Enter") {
         e.preventDefault();
 
+        // If Readonly -> Unlock
+        if (inp.readOnly) {
+          inp.readOnly = false;
+          inp.select();
+          return;
+        }
+
+        // If Editable -> Save / New Row
         var tr = inp.closest("tr");
         var now = Date.now();
 
