@@ -80,9 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const loadPresetBtn = document.getElementById("load-preset-btn");
   const deletePresetBtn = document.getElementById("delete-preset-btn");
   const addRowBtn = document.getElementById("add-row-btn");
-  const delRowBtn = document.getElementById("del-row-btn");
   const savePresetBtn = document.getElementById("save-preset-btn");
-  const selectAllCb = document.getElementById("select-all");
   const createNewBtn = document.getElementById("create-new-btn");
 
   let GLOBAL_PRESETS = {};
