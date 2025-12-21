@@ -51,8 +51,8 @@ def log_diag(msg):
     except:
         pass
 
-def show_palette():
-    """Validates and displays the ZenParams palette."""
+def show_palette(toggle=False):
+    """Validates and displays the ZenParams palette. If toggle is True, flips visibility."""
     global _ui, _palette, _handlers
     
     _palette = _ui.palettes.itemById(PALETTE_ID)
@@ -78,7 +78,10 @@ def show_palette():
         except:
              pass
     else:
-        _palette.isVisible = True
+        if toggle:
+            _palette.isVisible = not _palette.isVisible
+        else:
+            _palette.isVisible = True
 
     # Connect to HTML event
     on_html_event = MyHTMLEventHandler()
@@ -126,7 +129,7 @@ class DocumentActivatedHandler(adsk.core.DocumentEventHandler):
 class CommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
     def notify(self, args):
         try:
-            show_palette()
+            show_palette(toggle=True)
         except:
             if _ui:
                 _ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
@@ -208,7 +211,14 @@ class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
                 args.returnData = json.dumps({'status': 'success', 'msg': 'Already deleted'})
                 return
             
+            # Attempt Delete
             param.deleteMe()
+            adsk.doEvents() # Force update
+            
+            # Verify
+            if design.userParameters.itemByName(param_name):
+                raise Exception("Fusion refused delete (possible hidden dependency or lock)")
+                
             args.returnData = json.dumps({'status': 'success', 'msg': f"Deleted {param_name}"})
             
         except Exception as e:
@@ -474,6 +484,7 @@ def run(context):
         cmd_def = _ui.commandDefinitions.addButtonDefinition(
             CMD_ID, 'ZenParams Pro', 'Open ZenParams Palette', './resources'
         )
+        cmd_def.shortcut = 'Ctrl+P'
         
         on_created = CommandCreatedHandler()
         cmd_def.commandCreated.add(on_created)
