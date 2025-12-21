@@ -429,18 +429,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.updateTable = function (params) {
     GLOBAL_PARAMS = params;
     renderTable(params);
-    updateSuggestions(params);
   };
-
-  function updateSuggestions(params) {
-    const datalist = document.getElementById("param-suggestions");
-    datalist.innerHTML = "";
-    params.forEach((p) => {
-      const opt = document.createElement("option");
-      opt.value = p.name + " = ";
-      datalist.appendChild(opt);
-    });
-  }
 
   function renderTable(params) {
     const tbody = document.querySelector("#param-table tbody");
