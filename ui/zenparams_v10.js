@@ -54,11 +54,10 @@ window.response = function (dataWrapper) {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  const input = document.getElementById("console-input");
   const status = document.getElementById("status-bar");
 
   // IMMEDIATE LOAD PROOF
-  status.textContent = "v10.1 Active";
+  status.textContent = "v11 Active";
 
   // REQUEST INITIAL DATA FROM PYTHON
   // Using adsk.fusionSendData to ask Python for data
@@ -286,14 +285,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }, 1000); // 1 Second Interval
 
-  // Console Input
-  input.addEventListener("keypress", (e) => {
-    if (e.key === "Enter" && input.value.trim()) {
-      sendToFusion("create_param", input.value.trim());
-      input.value = "";
-    }
-  });
-
   // Preset Selection
   presetSelect.addEventListener("change", () => {
     const selectedName = presetSelect.value;
@@ -459,58 +450,73 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (params.length === 0) {
       tbody.innerHTML =
-        '<tr><td colspan="5" style="text-align:center; color:#555; padding: 20px;">No parameters found in this design.</td></tr>';
-      updateCurrentPreset(null); // Ensure status reflects empty state
+        '<tr><td colspan="5" style="text-align:center; color:#555; padding: 20px;">No parameters. Click "+ Add Parameter" to start.</td></tr>';
       return;
     }
 
     params.forEach((p) => {
       const tr = document.createElement("tr");
       if (p.isUser) {
-        tr.dataset.user = "true"; // Mark as user param for save filtering
+        tr.dataset.user = "true";
         tr.innerHTML = `
-            <td style="text-align:center;"><input type="checkbox" class="row-cb"></td>
              <td><input type="text" class="tbl-input name" value="${
                p.name
              }"></td>
              <td><input type="text" class="tbl-input expr" value="${
                p.expression
              }"></td>
-             <td style="font-size:11px; color:#666; padding-left:8px;">${
-               p.unit || ""
-             }</td>
+             <td style="font-size:11px; color:#666;">${p.unit || ""}</td>
              <td><input type="text" class="tbl-input comment" value="${
                p.comment
              }"></td>
+             <td><button class="row-delete" title="Delete row">×</button></td>
         `;
       } else {
-        tr.style.opacity = "0.7";
+        tr.classList.add("model-param");
         tr.innerHTML = `
-            <td></td>
             <td>${p.name}</td>
             <td style="font-family:consolas; color:#ce9178">${p.expression}</td>
             <td style="font-size:11px; color:#666;">${p.unit || ""}</td>
             <td style="color:#666; font-style:italic;">${p.comment}</td>
+            <td></td>
         `;
       }
       tbody.appendChild(tr);
+    });
+
+    // Attach delete handlers
+    tbody.querySelectorAll(".row-delete").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.target.closest("tr").remove();
+        setStatus("Row removed.", "info");
+      });
     });
   }
 
   function addNewRow() {
     const tbody = document.querySelector("#param-table tbody");
+    // Remove "no params" message if present
+    const emptyMsg = tbody.querySelector("td[colspan]");
+    if (emptyMsg) emptyMsg.closest("tr").remove();
+
     const tr = document.createElement("tr");
     tr.classList.add("new-row");
-    tr.dataset.user = "true"; // New rows are always user params
+    tr.dataset.user = "true";
     tr.innerHTML = `
-        <td style="text-align:center;"><input type="checkbox" class="row-cb"></td>
         <td><input type="text" class="tbl-input name" value="new_param"></td>
         <td><input type="text" class="tbl-input expr" value="10mm"></td>
         <td style="font-size:11px; color:#666;">mm</td>
         <td><input type="text" class="tbl-input comment" value=""></td>
+        <td><button class="row-delete" title="Delete row">×</button></td>
     `;
     tbody.insertBefore(tr, tbody.firstChild);
     tr.querySelector(".name").select();
+
+    // Attach delete handler
+    tr.querySelector(".row-delete").addEventListener("click", (e) => {
+      e.target.closest("tr").remove();
+      setStatus("Row removed.", "info");
+    });
   }
 
   function stagePreset(presetData, presetName) {
