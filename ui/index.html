@@ -111,6 +111,7 @@
       table {
         width: 100%;
         border-collapse: collapse;
+        table-layout: fixed; /* Critical for resizing */
       }
       th {
         background: #2d2d2d;
@@ -127,15 +128,18 @@
       }
       .resizer {
         position: absolute;
-        right: 0;
+        right: -4px;
         top: 0;
         height: 100%;
-        width: 5px;
+        width: 10px;
         background: transparent;
         cursor: col-resize;
         user-select: none;
         touch-action: none;
-        z-index: 10;
+        z-index: 100;
+      }
+      th:last-child .resizer {
+        display: none; /* No resize on last column */
       }
       .resizer:hover,
       .resizer.resizing {
@@ -359,11 +363,11 @@
         <table id="param-table">
           <thead>
             <tr>
-              <th width="38%">Name</th>
-              <th width="38%">Value</th>
-              <th width="8%">Unit</th>
-              <th width="12%">Comment</th>
-              <th width="4%"></th>
+              <th width="50%">Name</th>
+              <th width="25%">Value</th>
+              <th width="10%">Unit</th>
+              <th width="10%">Comment</th>
+              <th width="5%"></th>
             </tr>
           </thead>
           <tbody></tbody>
