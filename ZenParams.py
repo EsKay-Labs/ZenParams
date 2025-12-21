@@ -70,7 +70,7 @@ def show_palette(toggle=False):
             PALETTE_ID, 
             'ZenParams Pro', 
             html_file_url, 
-            True, True, True, 400, 600
+            True, True, True, 320, 600
         )
         
         # Snap to Right

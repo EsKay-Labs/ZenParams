@@ -134,6 +134,13 @@ var lastEnterRow = null;
 function attachEnterHandlers(context) {
   var allInputs = (context || document).querySelectorAll(".tbl-input");
   allInputs.forEach(function (inp) {
+    // Auto-Sync on Change (Seamless Save)
+    inp.onchange = function () {
+      var changes = gatherTableData();
+      sendToFusion("batch_update", { items: changes, suppress_refresh: true });
+      setStatus("Synced.", "success");
+    };
+
     inp.onkeydown = function (e) {
       if (e.key === "Enter") {
         e.preventDefault();
@@ -293,6 +300,9 @@ function requestData() {
 document.addEventListener("DOMContentLoaded", function () {
   console.log("[ZP] DOM ready");
   setStatus("Loading...", "info");
+
+  // Initialize Resizable Columns
+  setTimeout(initResize, 100); // Small delay to ensure layout
 
   // Get elements
   var presetSelect = document.getElementById("preset-select");
@@ -513,3 +523,50 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 console.log("[ZP] Script fully loaded");
+
+// --- RESIZE LOGIC ---
+function initResize() {
+  var table = document.getElementById("param-table");
+  if (!table) return;
+  var headers = table.querySelectorAll("th");
+
+  headers.forEach(function (th) {
+    if (th.innerHTML === "" || th.classList.contains("no-resize")) return;
+
+    var resizer = document.createElement("div");
+    resizer.className = "resizer";
+    th.appendChild(resizer);
+
+    createResizer(resizer, th);
+  });
+}
+
+function createResizer(resizer, th) {
+  var x, w;
+
+  resizer.onmousedown = function (e) {
+    e.preventDefault();
+    x = e.clientX;
+
+    var styles = window.getComputedStyle(th);
+    w = parseInt(styles.width, 10);
+
+    resizer.classList.add("resizing");
+    document.body.style.cursor = "col-resize"; // Global cursor
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  };
+
+  function onMouseMove(e) {
+    var dx = e.clientX - x;
+    th.style.width = w + dx + "px";
+  }
+
+  function onMouseUp() {
+    resizer.classList.remove("resizing");
+    document.body.style.cursor = "default";
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", onMouseUp);
+  }
+}

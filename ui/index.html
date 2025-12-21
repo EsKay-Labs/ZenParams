@@ -122,6 +122,24 @@
         font-size: 11px;
         position: sticky;
         top: 0;
+        /* Enable positioning for absolute resizer */
+        position: relative;
+      }
+      .resizer {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        width: 5px;
+        background: transparent;
+        cursor: col-resize;
+        user-select: none;
+        touch-action: none;
+        z-index: 10;
+      }
+      .resizer:hover,
+      .resizer.resizing {
+        background: #007acc;
       }
       td {
         padding: 4px 8px;
@@ -332,11 +350,11 @@
         <table id="param-table">
           <thead>
             <tr>
-              <th width="30%">Name</th>
-              <th width="25%">Value</th>
+              <th width="38%">Name</th>
+              <th width="38%">Value</th>
               <th width="8%">Unit</th>
-              <th width="30%">Comment</th>
-              <th width="7%"></th>
+              <th width="12%">Comment</th>
+              <th width="4%"></th>
             </tr>
           </thead>
           <tbody></tbody>
