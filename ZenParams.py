@@ -496,6 +496,9 @@ class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
                 
             self.send_response(f"Template '{name}' saved!", "success")
             
+            # ACTIVATION FIX: Make it the active preset immediately
+            self.handle_set_current_preset({'name': name})
+            
             # Refresh Lists
             self.send_initial_data()
             

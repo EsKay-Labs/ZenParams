@@ -172,6 +172,15 @@ function requestData() {
                 fillPresets(parsed.content.presets || {});
                 fillTable(parsed.content.params || []);
                 updateCurrentPreset(parsed.content.current_preset);
+
+                // SYNC DROPDOWN
+                if (
+                  parsed.content.current_preset &&
+                  document.getElementById("preset-select")
+                ) {
+                  document.getElementById("preset-select").value =
+                    parsed.content.current_preset;
+                }
               }
             } catch (parseErr) {
               setStatus("Parse error", "error");
