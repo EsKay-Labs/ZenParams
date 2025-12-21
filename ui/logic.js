@@ -116,6 +116,21 @@ function attachDeleteHandlers(context) {
   });
 }
 
+// Global Shortcuts
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape") {
+    sendToFusion("close_palette", {});
+  }
+  // Ctrl+P Global Toggle (Capture while focused)
+  if (e.ctrlKey && (e.key === "p" || e.key === "P")) {
+    e.preventDefault();
+    sendToFusion("close_palette", {});
+  }
+});
+
+var lastEnterTime = 0;
+var lastEnterRow = null;
+
 function attachEnterHandlers(context) {
   var allInputs = (context || document).querySelectorAll(".tbl-input");
   allInputs.forEach(function (inp) {
@@ -123,26 +138,30 @@ function attachEnterHandlers(context) {
       if (e.key === "Enter") {
         e.preventDefault();
 
-        // 1. Instant Sync (No Refresh)
+        var tr = inp.closest("tr");
+        var now = Date.now();
+
+        // 1. Always Sync
         var changes = gatherTableData();
         sendToFusion("batch_update", {
           items: changes,
           suppress_refresh: true,
         });
 
-        // 2. Continue Flow
-        addNewRow();
+        // 2. Double Enter Check
+        if (lastEnterRow === tr && now - lastEnterTime < 3000) {
+          addNewRow();
+          lastEnterTime = 0;
+          lastEnterRow = null;
+        } else {
+          lastEnterTime = now;
+          lastEnterRow = tr;
+          setStatus("Saved. Press Enter again to add new.", "info");
+        }
       }
     };
   });
 }
-
-// Global Shortcuts
-document.addEventListener("keydown", function (e) {
-  if (e.key === "Escape") {
-    sendToFusion("close_palette", {});
-  }
-});
 
 function addNewRow() {
   var tbody = document.querySelector("#param-table tbody");
