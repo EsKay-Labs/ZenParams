@@ -6,7 +6,7 @@
 	"description":	{
 		"":	"A joyous console for managing user parameters instantly."
 	},
-	"version":	"1.0",
+	"version":	"11.0",
 	"runOnStartup":	true,
 	"supportedOS":	"windows|mac",
 	"editEnabled":	true
