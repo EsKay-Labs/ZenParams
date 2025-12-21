@@ -18,7 +18,7 @@ _palette = None
 _initial_data_sent = False
 
 CMD_ID = 'zenparams_cmd_v2'
-PALETTE_ID = 'zenparams_palette_v7'  # Changed to force new instance
+PALETTE_ID = 'zenparams_palette_v8'  # Changed to force new instance with v11 HTML
 PALETTE_URL = './ui/index.html'
 
 def run(context):
@@ -80,7 +80,7 @@ def run(context):
         # Create or Get Palette (Non-Destructive)
         palette = _ui.palettes.itemById(PALETTE_ID)
         if not palette:
-            palette = _ui.palettes.add(PALETTE_ID, 'ZenParams V10', 'ui/zenparams_v10.html', True, True, True, 300, 600)
+            palette = _ui.palettes.add(PALETTE_ID, 'ZenParams V11', 'ui/zenparams_v11.html', True, True, True, 300, 600)
             try:
                 palette.dockingState = adsk.core.PaletteDockingStates.PaletteDockStateRight
             except:
