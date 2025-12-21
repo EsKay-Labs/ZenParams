@@ -31,14 +31,6 @@ def run(context):
         _app = adsk.core.Application.get()
         _ui = _app.userInterface
         
-        # CLEANUP: Remove old bridge file to force fresh sync
-        bridge_file = os.path.join(APP_PATH, 'ui', 'data_bridge.json')
-        if os.path.exists(bridge_file):
-            try:
-                os.remove(bridge_file)
-            except:
-                pass
-        
         # PREVENT SCRIPT FROM STOPPING AUTOMATICALLY
         # Moved to top to ensure it registered before any potential errors
         adsk.autoTerminate(False)
@@ -595,20 +587,6 @@ class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
             pass
         
         self.log_to_console(f"[DEBUG] Current: {current_preset} Legacy: {has_legacy_params}")
-        
-        # GHOST PROTECTION: If we're about to send 0 params, check if bridge file has valid data
-        # If it does, DON'T overwrite (we're probably in a stale API state from script restart)
-        if len(param_data) == 0:
-            try:
-                bridge_path = os.path.join(APP_PATH, 'ui', 'data_bridge.json')
-                if os.path.exists(bridge_path):
-                    with open(bridge_path, 'r') as f:
-                        existing = json.load(f)
-                        if existing.get('params') and len(existing.get('params', [])) > 0:
-                            self.log_to_console("[GHOST PROTECTION] Blocked overwrite of valid data with empty data!")
-                            return  # DON'T SEND - preserve existing data
-            except:
-                pass
         
         # 5. Atomic Send
         payload = {
