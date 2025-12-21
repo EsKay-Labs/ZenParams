@@ -1,35 +1,39 @@
-// ZenParams v10.1 JS - Dark Mode & Smart Logic
+// ZenParams v11 JS
 
 // Handler that Fusion recognizes - MUST BE GLOBAL AND IMMEDIATE
 window.response = function (dataWrapper) {
   try {
     const statusEl = document.getElementById("status-bar");
 
+    // DEBUG: Log what we receive
+    console.log(
+      "[ZenParams JS] response called with:",
+      typeof dataWrapper,
+      dataWrapper
+    );
+    if (statusEl) statusEl.textContent = "Data received...";
+
     // Fusion wraps data in {data: "..."} or passes it directly
-    const jsonStr =
-      dataWrapper && dataWrapper.data ? dataWrapper.data : dataWrapper;
+    let jsonStr = dataWrapper;
+    if (dataWrapper && typeof dataWrapper === "object" && dataWrapper.data) {
+      jsonStr = dataWrapper.data;
+    }
+
+    console.log("[ZenParams JS] jsonStr:", jsonStr);
     const res = JSON.parse(jsonStr);
+    console.log("[ZenParams JS] Parsed:", res.type, res);
 
     if (res.type === "init_all") {
-      if (window.populatePresets) window.populatePresets(res.content.presets);
-      if (window.updateTable) window.updateTable(res.content.params);
-
-      // Restore current preset name (or set to New Design)
-      window.restoreState(res.content.current_preset);
-
-      // Legacy Detection Prompt
-      if (res.content.legacy_params && !res.content.current_preset) {
-        // Small delay to ensure UI renders first
-        setTimeout(() => {
-          if (
-            confirm(
-              "⚠️ Existing parameters detected!\n\nThis design has parameters but no ZenParams preset.\n\nDo you want to save them as a new Preset now?"
-            )
-          ) {
-            document.getElementById("save-preset-btn").click();
-          }
-        }, 500);
+      console.log("[ZenParams JS] Got init_all, presets:", res.content.presets);
+      if (window.populatePresets) {
+        window.populatePresets(res.content.presets);
+        console.log("[ZenParams JS] populatePresets called");
+      } else {
+        console.log("[ZenParams JS] ERROR: populatePresets not defined!");
+        if (statusEl) statusEl.textContent = "Error: UI not ready";
       }
+      if (window.updateTable) window.updateTable(res.content.params);
+      if (window.restoreState) window.restoreState(res.content.current_preset);
     } else if (res.type === "init_presets") {
       if (window.populatePresets) window.populatePresets(res.content.presets);
     } else if (res.type === "update_table") {
@@ -45,6 +49,7 @@ window.response = function (dataWrapper) {
       }
     }
   } catch (e) {
+    console.log("[ZenParams JS] ERROR:", e);
     const statusEl = document.getElementById("status-bar");
     if (statusEl) {
       statusEl.textContent = "JS Error: " + e.message;
