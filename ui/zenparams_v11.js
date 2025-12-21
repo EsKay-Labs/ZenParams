@@ -228,66 +228,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Delete Selected Method
-  delRowBtn.addEventListener("click", () => {
-    const checked = document.querySelectorAll(".row-cb:checked");
-    if (checked.length === 0) return;
-    checked.forEach((cb) => cb.closest("tr").remove());
-    setStatus(`Removed ${checked.length} rows.`, "info");
-  });
-
-  // Select All
-  selectAllCb.addEventListener("change", (e) => {
-    const cbs = document.querySelectorAll(".row-cb");
-    cbs.forEach((cb) => (cb.checked = e.target.checked));
-  });
-
-  // -------------------------------------------------------------------------
-  // WATCHDOG LOOP (Auto-Refresh Logic)
-  // -------------------------------------------------------------------------
-
-  let lastTimestamp = 0;
-
-  const watchdog = setInterval(() => {
-    // 1. Keep Alive (Optional, mostly to ensure Fusion doesn't sleep the script)
-    // Removed to prevent UI lag. Passive polling only.
-    /*
-    try {
-      adsk.fusionSendData(
-        "send",
-        JSON.stringify({ action: "check", data: "" })
-      );
-    } catch (e) {}
-    */
-
-    // 2. Poll the bridge file
-    fetch("data_bridge.json?t=" + Date.now())
-      .then((r) => r.json())
-      .then((data) => {
-        // Only update if timestamp is newer
-        if (data.timestamp && data.timestamp > lastTimestamp) {
-          lastTimestamp = data.timestamp;
-
-          // Handle Payload
-          if (data.type === "init_all") {
-            window.populatePresets(data.content.presets);
-            window.updateTable(data.content.params);
-            window.restoreState(data.content.current_preset);
-            setStatus("Refreshed", "success");
-          } else if (data.type === "init_presets") {
-            window.populatePresets(data.content.presets);
-          } else if (data.type === "update_table") {
-            window.updateTable(data.content.params);
-          } else if (data.type === "notification") {
-            setStatus(data.message, data.status);
-          }
-        }
-      })
-      .catch((e) => {
-        // Silent fail (offline)
-      });
-  }, 1000); // 1 Second Interval
-
   // Preset Selection
   presetSelect.addEventListener("change", () => {
     const selectedName = presetSelect.value;
