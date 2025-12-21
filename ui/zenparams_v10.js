@@ -105,10 +105,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Save Template Method
   savePresetBtn.addEventListener("click", () => {
-    // 1. Gather Data
-    const data = gatherTableData();
-    if (data.length === 0) {
-      setStatus("Table is empty.", "error");
+    // 1. Gather Data - ONLY USER PARAMS (not model params)
+    const allData = gatherTableData();
+    const userParams = allData.filter((item) => item.isUser === true);
+
+    if (userParams.length === 0) {
+      setStatus("No user parameters to save. Add some first.", "error");
       return;
     }
 
@@ -125,9 +127,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 3. Convert List to Dict for Storage
+    // 3. Convert List to Dict for Storage (USER PARAMS ONLY)
     const paramsDict = {};
-    data.forEach((item) => {
+    userParams.forEach((item) => {
       paramsDict[item.name] = item.expression;
     });
 
@@ -138,11 +140,9 @@ document.addEventListener("DOMContentLoaded", () => {
       params: paramsDict,
     });
 
-    // 5. Poll for backend response (force immediate check)
-    // The Watchdog will catch it anyway, but this is for instant feedback feel
-    setTimeout(() => {
-      // Force watchdog check soon
-    }, 500);
+    // 5. Immediately update UI to reflect new preset
+    updateCurrentPreset(name);
+    setStatus(`Saved '${name}'! Refreshing...`, "success");
   });
 
   // Delete Preset Method (Protected)
@@ -173,10 +173,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     sendToFusion("delete_preset", { name: selectedName });
 
-    // Clear current preset if it was deleted
-    if (CURRENT_PRESET === selectedName) {
-      updateCurrentPreset(null);
-    }
+    // Reset to New Preset state
+    updateCurrentPreset(null);
+    presetSelect.value = "New Preset";
+    renderTable([]); // Clear the table
+    setStatus("Preset deleted. Select a new preset to load.", "success");
   });
 
   // Help Modal
@@ -410,6 +411,7 @@ document.addEventListener("DOMContentLoaded", () => {
     params.forEach((p) => {
       const tr = document.createElement("tr");
       if (p.isUser) {
+        tr.dataset.user = "true"; // Mark as user param for save filtering
         tr.innerHTML = `
             <td style="text-align:center;"><input type="checkbox" class="row-cb"></td>
              <td><input type="text" class="tbl-input name" value="${
@@ -443,6 +445,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const tbody = document.querySelector("#param-table tbody");
     const tr = document.createElement("tr");
     tr.classList.add("new-row");
+    tr.dataset.user = "true"; // New rows are always user params
     tr.innerHTML = `
         <td style="text-align:center;"><input type="checkbox" class="row-cb"></td>
         <td><input type="text" class="tbl-input name" value="new_param"></td>
@@ -494,6 +497,7 @@ document.addEventListener("DOMContentLoaded", () => {
           name: nameInput.value.trim(),
           expression: exprInput.value.trim(),
           comment: cmtInput ? cmtInput.value.trim() : "",
+          isUser: row.dataset.user === "true", // Include user flag for filtering
         });
       }
     });
