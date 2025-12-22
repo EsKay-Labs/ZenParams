@@ -245,6 +245,37 @@
         font-style: italic;
       }
 
+      /* Group Headers */
+      .group-header {
+        background: #2d2d2d;
+        color: #eee;
+        padding: 6px 8px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid #3e3e42;
+        border-top: 1px solid #3e3e42;
+        user-select: none;
+      }
+      .group-header:first-child {
+        border-top: none;
+      }
+      .group-header:hover {
+        background: #383838;
+      }
+      .group-toggle {
+        margin-right: 8px;
+        font-size: 10px;
+        transition: transform 0.2s;
+      }
+      .group-header.collapsed .group-toggle {
+        transform: rotate(-90deg);
+      }
+      .hidden-row {
+        display: none;
+      }
+
       /* Scrollbar */
       ::-webkit-scrollbar {
         width: 8px;
@@ -266,21 +297,35 @@
       <!-- Header -->
       <div class="header">
         <div style="font-size: 11px; color: #888; font-weight: 500">
-          ZenParams v11
+          ZenParams v12
         </div>
-        <button
-          id="help-btn"
-          style="
-            background: transparent;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            font-size: 14px;
-          "
-          title="Help"
-        >
-          ?
-        </button>
+        <div style="display: flex; gap: 8px">
+          <button
+            id="fit-btn"
+            style="
+              background: transparent;
+              border: none;
+              font-size: 16px;
+              cursor: pointer;
+            "
+            title="Smart Fit Wizard"
+          >
+            🪄
+          </button>
+          <button
+            id="help-btn"
+            style="
+              background: transparent;
+              border: none;
+              color: #666;
+              cursor: pointer;
+              font-size: 14px;
+            "
+            title="Help"
+          >
+            ?
+          </button>
+        </div>
       </div>
 
       <!-- Legacy Import Notice (Hidden by default) -->
@@ -383,6 +428,130 @@
       <div id="status-bar" class="status-bar">Ready.</div>
     </div>
 
+    <!-- Smart Fit Modal -->
+    <div
+      id="fit-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 200;
+      "
+    >
+      <div
+        style="
+          background: #252526;
+          margin: 10% auto;
+          padding: 20px;
+          width: 300px;
+          border-radius: 6px;
+          border: 1px solid #454545;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        "
+      >
+        <h3
+          style="
+            color: #4ec9b0;
+            margin-top: 0;
+            border-bottom: 1px solid #3e3e42;
+            padding-bottom: 10px;
+          "
+        >
+          🪄 Smart Fit Wizard
+        </h3>
+
+        <label
+          style="
+            display: block;
+            color: #aaa;
+            margin-bottom: 4px;
+            font-size: 11px;
+          "
+          >Fit Context</label
+        >
+        <select
+          id="fit-context"
+          style="
+            width: 100%;
+            padding: 6px;
+            margin-bottom: 12px;
+            background: #1e1e1e;
+            color: #ccc;
+            border: 1px solid #3e3e42;
+          "
+        >
+          <option value="bolt">Bolt / Screw Clearance</option>
+          <option value="magnet">Magnet Press Fit</option>
+          <option value="bearing">Bearing Press Fit</option>
+          <option value="insert">Heat Set Insert</option>
+          <option value="lid">Lid / Battery Door (Snug)</option>
+          <option value="slider">Sliding Part</option>
+        </select>
+
+        <label
+          style="
+            display: block;
+            color: #aaa;
+            margin-bottom: 4px;
+            font-size: 11px;
+          "
+          >Nominal Size (mm)</label
+        >
+        <input
+          type="number"
+          id="fit-size"
+          value="3.0"
+          step="0.1"
+          style="
+            width: 95%;
+            padding: 6px;
+            margin-bottom: 12px;
+            background: #1e1e1e;
+            color: #fff;
+            border: 1px solid #3e3e42;
+          "
+        />
+
+        <div
+          style="
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 16px;
+          "
+        >
+          <button
+            id="fit-cancel"
+            style="
+              padding: 6px 12px;
+              background: transparent;
+              border: 1px solid #3e3e42;
+              color: #ccc;
+              cursor: pointer;
+            "
+          >
+            Cancel
+          </button>
+          <button
+            id="fit-create"
+            style="
+              padding: 6px 12px;
+              background: #0e639c;
+              border: none;
+              color: white;
+              cursor: pointer;
+            "
+          >
+            Create Parameter
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Help Modal (Hidden) -->
     <div
       id="help-modal"
@@ -415,25 +584,21 @@
         <h3 style="color: #4ec9b0; margin-top: 0">ZenParams Pro Guide</h3>
         <ul style="padding-left: 15px; line-height: 1.6">
           <li>
+            <strong>Grouping:</strong> Add
+            <code style="background: #333; padding: 2px 4px">[Name]</code> to
+            comments to create folders.
+          </li>
+          <li>
+            <strong>Smart Fits:</strong> Use the
+            <span style="color: #dcdcaa">🪄 Wand</span> to generate tolerances.
+          </li>
+          <li>
             <strong>Rapid Entry:</strong> Press
             <code style="background: #333; padding: 2px 4px">Enter</code> in any
             field to add a new row instantly.
           </li>
           <li>
             <strong>Load:</strong> Apply the selected preset to your design.
-          </li>
-          <li>
-            <strong>Save Template:</strong> Save the current parameters as a
-            reusable template.
-          </li>
-          <li>
-            <strong>True Delete:</strong> Click
-            <span style="color: #f28b82">×</span> to safe-delete from Fusion
-            (checks dependencies).
-          </li>
-          <li>
-            <strong>Legacy Import:</strong> Use the "Import" button to capture
-            existing design params.
           </li>
         </ul>
       </div>

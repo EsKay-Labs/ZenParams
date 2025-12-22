@@ -246,11 +246,27 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             if not design: return []
             
             param_list = []
+            
+            # Helper to parse "[Group] Comment"
+            def parse_group(comment):
+                group = "Uncategorized"
+                clean_comment = comment
+                if comment and comment.startswith('['):
+                    end_idx = comment.find(']')
+                    if end_idx != -1:
+                        group = comment[1:end_idx].strip()
+                        clean_comment = comment[end_idx+1:].strip()
+                return group, clean_comment
+
+            # User Params
             for param in design.userParameters:
                 if param.name == '_zen_current_preset': continue
+                group, clean_cmt = parse_group(param.comment)
                 param_list.append({
                     'name': param.name, 'expression': param.expression,
-                    'unit': param.unit, 'comment': param.comment, 'isUser': True
+                    'unit': param.unit, 'comment': clean_cmt, 
+                    'group': group, 'fullComment': param.comment,
+                    'isUser': True
                 })
             
             # Model Params (Limit 50)
@@ -258,9 +274,13 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             for param in design.allParameters:
                 if count > 50: break
                 if design.userParameters.itemByName(param.name): continue
+                # Model params don't usually have comments we control, but just in case
+                group, clean_cmt = parse_group(param.comment)
                 param_list.append({
                     'name': param.name, 'expression': param.expression,
-                    'unit': param.unit, 'comment': param.comment, 'isUser': False
+                    'unit': param.unit, 'comment': clean_cmt, 
+                    'group': "Model Parameters", 'fullComment': param.comment,
+                    'isUser': False
                 })
                 count += 1
             return param_list

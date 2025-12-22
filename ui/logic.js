@@ -22,7 +22,7 @@ function fillPresets(presets) {
   setStatus("Ready.", "success");
 }
 
-// Fill params table
+// Fill params table with Grouping
 function fillTable(params) {
   GLOBAL_PARAMS = params;
   var tbody = document.querySelector("#param-table tbody");
@@ -35,42 +35,84 @@ function fillTable(params) {
     return;
   }
 
+  // 1. Group Data
+  var groups = {};
+  var groupOrder = []; // To keep stability
+
   params.forEach(function (p) {
-    var tr = document.createElement("tr");
-    if (p.isUser) {
-      tr.dataset.user = "true";
-      tr.innerHTML =
-        '<td><input type="text" readonly class="tbl-input name" value="' +
-        p.name +
-        '"></td>' +
-        '<td><input type="text" readonly class="tbl-input expr" value="' +
-        p.expression +
-        '"></td>' +
-        '<td style="font-size:11px; color:#666;">' +
-        (p.unit || "") +
-        "</td>" +
-        '<td><input type="text" readonly class="tbl-input comment" value="' +
-        (p.comment || "") +
-        '"></td>' +
-        '<td><button class="row-delete" title="Delete">×</button></td>';
-    } else {
-      tr.classList.add("model-param");
-      tr.innerHTML =
-        "<td>" +
-        p.name +
-        "</td>" +
-        '<td style="font-family:consolas; color:#ce9178">' +
-        p.expression +
-        "</td>" +
-        '<td style="font-size:11px; color:#666;">' +
-        (p.unit || "") +
-        "</td>" +
-        '<td style="color:#666; font-style:italic;">' +
-        (p.comment || "") +
-        "</td>" +
-        "<td></td>";
+    var gName = p.group || "Uncategorized";
+    if (!groups[gName]) {
+      groups[gName] = [];
+      groupOrder.push(gName);
     }
-    tbody.appendChild(tr);
+    groups[gName].push(p);
+  });
+
+  // 2. Render Groups
+  groupOrder.forEach(function (gName) {
+    // Header Row
+    var headerRow = document.createElement("tr");
+    var td = document.createElement("td");
+    td.colSpan = 5;
+    td.className = "group-header";
+    td.innerHTML = '<span class="group-toggle">▼</span> ' + gName;
+    td.onclick = function () {
+      td.classList.toggle("collapsed");
+      var rows = document.querySelectorAll(
+        '.group-row[data-group="' + gName + '"]'
+      );
+      rows.forEach(function (r) {
+        if (td.classList.contains("collapsed")) {
+          r.classList.add("hidden-row");
+        } else {
+          r.classList.remove("hidden-row");
+        }
+      });
+    };
+    headerRow.appendChild(td);
+    tbody.appendChild(headerRow);
+
+    // Param Rows
+    groups[gName].forEach(function (p) {
+      var tr = document.createElement("tr");
+      tr.className = "group-row";
+      tr.dataset.group = gName;
+
+      if (p.isUser) {
+        tr.dataset.user = "true";
+        tr.innerHTML =
+          '<td><input type="text" readonly class="tbl-input name" value="' +
+          p.name +
+          '"></td>' +
+          '<td><input type="text" readonly class="tbl-input expr" value="' +
+          p.expression +
+          '"></td>' +
+          '<td style="font-size:11px; color:#666;">' +
+          (p.unit || "") +
+          "</td>" +
+          '<td><input type="text" readonly class="tbl-input comment" value="' +
+          (p.comment || "") +
+          '"></td>' +
+          '<td><button class="row-delete" title="Delete">×</button></td>';
+      } else {
+        tr.classList.add("model-param");
+        tr.innerHTML =
+          "<td>" +
+          p.name +
+          "</td>" +
+          '<td style="font-family:consolas; color:#ce9178">' +
+          p.expression +
+          "</td>" +
+          '<td style="font-size:11px; color:#666;">' +
+          (p.unit || "") +
+          "</td>" +
+          '<td style="color:#666; font-style:italic;">' +
+          (p.comment || "") +
+          "</td>" +
+          "<td></td>";
+      }
+      tbody.appendChild(tr);
+    });
   });
 
   // Attach delete handlers
@@ -215,15 +257,43 @@ function addNewRow() {
 function gatherTableData() {
   var changes = [];
   var rows = document.querySelectorAll("#param-table tbody tr");
+
+  var currentGroup = ""; // track context
+
   rows.forEach(function (row) {
+    // Check if header
+    if (row.querySelector(".group-header")) {
+      currentGroup = row.innerText.replace("▼", "").replace("►", "").trim();
+      return;
+    }
+
     var nameInput = row.querySelector(".name");
     var exprInput = row.querySelector(".expr");
     var cmtInput = row.querySelector(".comment");
+
     if (nameInput && exprInput) {
+      var rawCmt = cmtInput ? cmtInput.value.trim() : "";
+
+      // Re-inject Group Tag if needed
+      // Logic: If user didn't write a tag, and we are in a group, add it.
+      // But if user moved it to another group by writing [NewGroup], respect that.
+      var finalCmt = rawCmt;
+
+      if (
+        currentGroup &&
+        currentGroup !== "Uncategorized" &&
+        currentGroup !== "Model Parameters"
+      ) {
+        // Check if user manually overrode
+        if (!rawCmt.startsWith("[")) {
+          finalCmt = "[" + currentGroup + "] " + rawCmt;
+        }
+      }
+
       changes.push({
         name: nameInput.value.trim(),
         expression: exprInput.value.trim(),
-        comment: cmtInput ? cmtInput.value.trim() : "",
+        comment: finalCmt,
         isUser: row.dataset.user === "true",
       });
     }
@@ -356,6 +426,97 @@ document.addEventListener("DOMContentLoaded", function () {
   if (addRowBtn) {
     addRowBtn.onclick = function () {
       addNewRow();
+    };
+  }
+
+  // --- SMART FIT LOGIC ---
+  var fitBtn = document.getElementById("fit-btn");
+  var fitModal = document.getElementById("fit-modal");
+  var fitCreateBtn = document.getElementById("fit-create");
+  var fitCancelBtn = document.getElementById("fit-cancel");
+
+  if (fitBtn && fitModal) {
+    fitBtn.onclick = function () {
+      fitModal.style.display = "block";
+      document.getElementById("fit-size").focus();
+    };
+
+    fitCancelBtn.onclick = function () {
+      fitModal.style.display = "none";
+    };
+
+    fitCreateBtn.onclick = function () {
+      var ctx = document.getElementById("fit-context").value;
+      var size = parseFloat(document.getElementById("fit-size").value) || 0;
+
+      // GENERATE LOGIC
+      var name = "";
+      var expr = "";
+      var comment = "[SmartFit] ";
+
+      if (ctx === "bolt") {
+        name = "Hole_M" + size;
+        expr = size + "mm + 0.2mm"; // Standard Clearance
+        comment += "M" + size + " Clearance";
+      } else if (ctx === "magnet") {
+        name = "Mag_" + size + "mm";
+        expr = size + "mm + 0.15mm"; // Press fit (PLA)
+        comment += "Magnet Press";
+      } else if (ctx === "bearing") {
+        name = "Brg_" + size + "mm";
+        expr = size + "mm + 0.1mm"; // Tight Press
+        comment += "Bearing Press";
+      } else if (ctx === "insert") {
+        name = "Ins_M" + Math.floor(size); // Usually 3, 4, 5
+        expr = size + "mm - 0.1mm"; // Undersize for Heat Set
+        comment += "Heat Set Insert";
+      } else if (ctx === "lid") {
+        name = "Lid_Gap";
+        expr = "0.15mm";
+        comment += "Friction Fit Lid";
+      } else {
+        name = "Fit_Gen";
+        expr = size + "mm + 0.2mm";
+        comment += "General Clearance";
+      }
+
+      // Insert
+      var tbody = document.querySelector("#param-table tbody");
+      // Remove empty message if present
+      var emptyMsg = tbody.querySelector("td[colspan]");
+      if (emptyMsg) emptyMsg.closest("tr").remove();
+
+      var tr = document.createElement("tr");
+      tr.dataset.user = "true";
+      tr.className = "group-row";
+      tr.dataset.group = "SmartFit"; // Auto-group
+
+      tr.innerHTML =
+        '<td><input type="text" class="tbl-input name" value="' +
+        name +
+        '"></td>' +
+        '<td><input type="text" class="tbl-input expr" value="' +
+        expr +
+        '"></td>' +
+        '<td style="font-size:11px; color:#666;">mm</td>' +
+        '<td><input type="text" class="tbl-input comment" value="' +
+        comment +
+        '"></td>' +
+        '<td><button class="row-delete" title="Delete">×</button></td>';
+
+      // Insert at top or under "SmartFit" group if exists...
+      // Simple: Insert at top for now, refresh will sort it.
+      tbody.insertBefore(tr, tbody.firstChild);
+
+      attachDeleteHandlers(tr);
+      attachEnterHandlers(tr);
+
+      // Auto-save
+      var changes = gatherTableData();
+      sendToFusion("batch_update", { items: changes, suppress_refresh: false });
+
+      fitModal.style.display = "none";
+      setStatus("Created Smart Fit: " + name, "success");
     };
   }
 
