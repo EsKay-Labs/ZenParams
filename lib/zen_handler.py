@@ -96,10 +96,12 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             
             if count > 0:
                 log_diag(f"Auto-Sort: {count} updated.")
+                adsk.doEvents()
+                time.sleep(0.25) # Wait for Fusion to commit changes
                 self._send_notification(f"Auto-sorted {count} params", "success")
             elif data: # Only notify "No changes" if manually triggered (data is not None)
                 self._send_notification("No new associations found.", "info")
-                
+            
         except Exception as e:
             log_diag(f"Auto-Sort Error: {str(e)}")
             if data: self._send_notification(f"Sort Error: {str(e)}", "error")
