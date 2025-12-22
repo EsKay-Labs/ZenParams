@@ -9,52 +9,115 @@ class ZenDependencyCrawler:
     """
     def __init__(self, design):
         self.design = design
+        self.entity_map = {} # { entity_token: set(body_names) }
+        self._build_reverse_map()
 
     def get_param_body_name(self, param):
         """
-        Helper to return the name of the first driven body found, or None.
+        Determines the owner body for a parameter using the reverse map.
+        Returns:
+            - "BodyName" (if single match)
+            - "Shared" (if multiple bodies)
+            - None (if no link found)
         """
-        bodies = self.get_driven_bodies(param)
-        if bodies:
-            return bodies[0]
-        return None
-
-    def get_driven_bodies(self, param):
-        """
-        Traces a parameter to find which bodies it affects.
-        Returns a list of unique body names (e.g. ['Enclosure', 'Lid']).
-        """
+        if not param.isValid: return None
+        
+        # 1. Trace immediate dependencies
+        # A param might drive: SketchDimension, FeatureInput, etc.
         driven_bodies = set()
         
         try:
-            # 1. Direct Dependency Check
-            # Warning: specific API calls can be heavy, check strictly necessary props
-            if not param.isValid: return []
-
-            # dependentDependencies returns a Dependencies collection
             deps = param.dependentDependencies
-            
             for i in range(deps.count):
                 dep = deps.item(i)
                 entity = dep.entity
                 
-                # CASE A: Parameter drives a Feature (Extrude, Revolve, etc.)
-                if isinstance(entity, adsk.fusion.Feature):
-                    # log_diag(f"  -> Drives Feature: {entity.name}")
-                    # Check if feature has bodies
-                    if hasattr(entity, 'bodies') and entity.bodies.count > 0:
-                        for j in range(entity.bodies.count):
-                            body = entity.bodies.item(j)
-                            if body.isValid and body.name:
-                                # log_diag(f"    -> Affects Body: {body.name}")
-                                driven_bodies.add(body.name)
+                if not entity or not entity.isValid: continue
+
+                # Resolve the "Real" Entity that has the geometry
+                # e.g. SketchDimension -> OwnerSketch
+                target_token = None
                 
-                # CASE B: Parameter drives a Sketch Dimension?
-                # (Future Complexity: Sketch -> Profile -> Feature -> Body)
-                # For now, we skip deep recursion to keep it fast ("Overkill" but efficient)
+                if isinstance(entity, adsk.fusion.SketchDimension):
+                    target_token = entity.sketch.entityToken
+                elif isinstance(entity, adsk.fusion.Feature):
+                    target_token = entity.entityToken
+                elif hasattr(entity, 'entityToken'):
+                    target_token = entity.entityToken
+                
+                # trace log?
+                # log_diag(f"  Param {param.name} -> {type(entity)} -> {target_token}")
+
+                if target_token and target_token in self.entity_map:
+                    found_bodies = self.entity_map[target_token]
+                    driven_bodies.update(found_bodies)
+                    
+        except: pass
         
-        except:
-            # Logging requires a way to communicate back, for now just fail safe
-            pass
+        # 2. Analyze Results
+        if len(driven_bodies) == 0: return None
+        if len(driven_bodies) == 1: return list(driven_bodies)[0]
+        return "Shared" # Conflict
+
+    def _build_reverse_map(self):
+        """
+        Scans the design to find which Features/Sketches own which Bodies.
+        Populates self.entity_map.
+        """
+        try:
+            root = self.design.rootComponent
+            all_comps = [root] 
+            # Add occurrences later if needed, focusing on Root for now for speed
             
-        return list(driven_bodies)
+            for comp in all_comps:
+                for body in comp.bRepBodies:
+                    if not body.isValid: continue
+                    body_name = body.name
+                    
+                    # 1. Creating Feature (e.g. Extrude)
+                    feat = body.creationFeature
+                    if feat and feat.isValid:
+                        self._map_entity(feat, body_name)
+                        
+                        # 2. Source Sketches?
+                        # This is the "Deep" link.
+                        # Most features (Extrude, Revolve) have a 'profile' input.
+                        # We need to find the sketch associated with that profile.
+                        self._map_feature_to_sketch(feat, body_name)
+
+        except Exception as e:
+            log_diag(f"Crawler Map Error: {e}")
+
+    def _map_entity(self, entity, body_name):
+        token = entity.entityToken
+        if token not in self.entity_map:
+            self.entity_map[token] = set()
+        self.entity_map[token].add(body_name)
+
+    def _map_feature_to_sketch(self, feat, body_name):
+        # Extract profiles to find the sketch
+        # Supported: Extrude, Revolve, Sweep, Loft
+        try:
+            # Common property: 'profile' (Input or Object)
+            # ExtrudeFeature -> profile
+            profile = None
+            if hasattr(feat, 'profile'): 
+                profile = feat.profile
+            # RevolveFeature -> profile
+            
+            if profile:
+                # If it's a Profile object, it has a parentSketch
+                if isinstance(profile, adsk.fusion.Profile):
+                    self._map_entity(profile.parentSketch, body_name)
+                # If it's a collection of profiles (ProfileWrapper? ObjectCollection?)
+                elif hasattr(profile, 'count'): # Collection
+                    for k in range(profile.count):
+                        item = profile.item(k)
+                        if isinstance(item, adsk.fusion.Profile):
+                            self._map_entity(item.parentSketch, body_name)
+        except: pass
+
+    def get_driven_bodies(self, param):
+        # Legacy/Debug wrapper
+        name = self.get_param_body_name(param)
+        return [name] if name else []
