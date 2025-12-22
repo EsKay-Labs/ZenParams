@@ -171,25 +171,13 @@
       td {
         padding: 4px 6px;
         border-bottom: 1px solid #2d2d2d;
+        white-space: nowrap; /* Keep content on one line */
       }
-      /* Column-specific widths */
-      td:nth-child(1) {
-        min-width: 120px;
-      } /* Name - fits content */
-      td:nth-child(2) {
-        min-width: 80px;
-      } /* Value - needs space */
-      td:nth-child(3) {
-        width: 45px;
-      } /* Unit - fixed */
-      td:nth-child(4) {
-        width: 1px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      } /* Comment - shrinks */
+      /* Only delete column is fixed, rest auto-size to content */
       td:nth-child(5) {
-        width: 30px;
-      } /* Delete - fixed */
+        width: 24px;
+        padding: 0;
+      } /* Delete button */
 
       .tbl-input {
         width: 100%;
