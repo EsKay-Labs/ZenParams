@@ -260,6 +260,40 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
 
     # --- HELPERS ---
 
+    def _auto_sort_params(self):
+        """
+        Uses ZenDependencyCrawler to find bodies associated with parameters
+        and updates their group tags if they are uncategorized.
+        """
+        try:
+            app = adsk.core.Application.get()
+            design = adsk.fusion.Design.cast(app.activeProduct)
+            if not design: return
+
+            crawler = ZenDependencyCrawler(design)
+            count = 0
+            
+            for param in design.userParameters:
+                if param.name == '_zen_current_preset': continue
+                
+                # Check if already grouped
+                comment = param.comment
+                if comment.startswith('['): continue # Already grouped
+                
+                # Crawl
+                body_name = crawler.get_param_body_name(param)
+                if body_name:
+                    # Update Comment: "[BodyName] Original Comment"
+                    new_comment = f"[{body_name}] {comment}"
+                    param.comment = new_comment
+                    count += 1
+            
+            if count > 0:
+                self._send_notification(f"Auto-sorted {count} params", "success")
+                
+        except Exception as e:
+            log_diag(f"Auto-Sort Error: {str(e)}")
+
     def _send_initial_data(self):
         payload = self._gather_payload_dict()
         self._send_response(payload, 'init_all')
