@@ -90,11 +90,11 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                     new_comment = f"[{body_name}] {comment}"
                     param.comment = new_comment
                     count += 1
+                    adsk.doEvents() # Prevent race condition
                     log_diag(f"  Sorted {param.name} -> {body_name}")
             
             if count > 0:
                 log_diag(f"Auto-Sort: {count} updated.")
-                adsk.doEvents()
                 self._send_notification(f"Auto-sorted {count} params", "success")
             elif data: # Only notify "No changes" if manually triggered (data is not None)
                 self._send_notification("No new associations found.", "info")
