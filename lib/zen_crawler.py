@@ -75,7 +75,8 @@ class ZenDependencyCrawler:
                         driven_bodies.update(found_bodies)
                         log_diag(f"  MATCH: {target_name} -> {model_param.name} -> {list(found_bodies)}")
                     elif target_token:
-                        log_diag(f"  MISS: {target_name} -> {model_param.name} (Token {target_token[:5]}... not in map)")
+                        creator_type = creator.objectType if hasattr(creator, 'objectType') else type(creator).__name__
+                        log_diag(f"  MISS: {target_name} -> {model_param.name} [{creator_type}] (Token {target_token[:5]}... not in map)")
 
         except Exception as e:
             log_diag(f"Param Trace Error: {e}")
@@ -121,32 +122,47 @@ class ZenDependencyCrawler:
             log_diag(f"Crawler Map Error: {e}")
 
     def _map_entity(self, entity, body_name):
-        token = entity.entityToken
-        if token not in self.entity_map:
-            self.entity_map[token] = set()
-        self.entity_map[token].add(body_name)
+        try:
+            token = entity.entityToken
+            if token not in self.entity_map:
+                self.entity_map[token] = set()
+            self.entity_map[token].add(body_name)
+        except: pass
 
     def _map_feature_to_sketch(self, feat, body_name):
-        # Extract profiles to find the sketch
-        # Supported: Extrude, Revolve, Sweep, Loft
+        # Extract profiles/points to find the sketch
         try:
-            # Common property: 'profile' (Input or Object)
-            # ExtrudeFeature -> profile
-            profile = None
+            # 1. Profile-based (Extrude, Revolve, Sweep, Loft)
             if hasattr(feat, 'profile'): 
                 profile = feat.profile
-            # RevolveFeature -> profile
-            
-            if profile:
-                # If it's a Profile object, it has a parentSketch
-                if isinstance(profile, adsk.fusion.Profile):
-                    self._map_entity(profile.parentSketch, body_name)
-                # If it's a collection of profiles (ProfileWrapper? ObjectCollection?)
-                elif hasattr(profile, 'count'): # Collection
-                    for k in range(profile.count):
-                        item = profile.item(k)
-                        if isinstance(item, adsk.fusion.Profile):
-                            self._map_entity(item.parentSketch, body_name)
+                if profile:
+                    # Single Profile
+                    if isinstance(profile, adsk.fusion.Profile):
+                        self._map_entity(profile.parentSketch, body_name)
+                    # Profile Collection
+                    elif hasattr(profile, 'count'): 
+                        for k in range(profile.count):
+                            item = profile.item(k)
+                            if isinstance(item, adsk.fusion.Profile):
+                                self._map_entity(item.parentSketch, body_name)
+                                
+            # 2. Hole Feature (Uses sketchPoints)
+            if isinstance(feat, adsk.fusion.HoleFeature):
+                # Hole can be placed by SketchPoints or Non-Sketch
+                points = feat.sketchPoints
+                if points and points.count > 0:
+                    pt = points.item(0)
+                    if hasattr(pt, 'parentSketch'):
+                         self._map_entity(pt.parentSketch, body_name)
+                         
+             # 3. Emboss (Uses sketchProfiles)
+            if isinstance(feat, adsk.fusion.EmbossFeature):
+                 profs = feat.sketchProfiles
+                 if profs and profs.count > 0:
+                     p = profs.item(0)
+                     if isinstance(p, adsk.fusion.Profile):
+                         self._map_entity(p.parentSketch, body_name)
+
         except: pass
 
     def get_driven_bodies(self, param):
