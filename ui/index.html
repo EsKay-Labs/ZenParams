@@ -174,17 +174,20 @@
         border-bottom: 1px solid #2d2d2d;
         white-space: nowrap; /* Keep content on one line */
       }
-      /* Column-specific widths - Force compact fit */
+      /* Column-specific widths - Compact but readable */
       td:nth-child(1),
-      td:nth-child(2),
-      td:nth-child(3) {
-        width: 1px; /* Force table cell to only be as wide as content */
+      td:nth-child(2) {
+        width: auto; /* Let content define size (no clipping) */
         white-space: nowrap;
       }
-      /* Comment takes remaining space */
+      td:nth-child(3) {
+        width: 1%; /* Unit is small, stick to content */
+        white-space: nowrap;
+      }
+      /* Comment takes ALL remaining space aggressively */
       td:nth-child(4) {
-        width: auto;
-        max-width: 0; /* Crucial for overflow:hidden */
+        width: 100%;
+        max-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -196,8 +199,8 @@
       } /* Delete button */
 
       .tbl-input {
-        width: 100%; /* Fill the tight cell */
-        min-width: 10px;
+        width: 100%;
+        min-width: 40px; /* Prevent total collapse clipping */
         box-sizing: border-box;
         background: transparent;
         border: 1px solid transparent;
