@@ -16,6 +16,7 @@ _handlers = []
 _app = None
 _ui = None
 _last_active_doc_name = None 
+_palette_handler = None
 
 CMD_ID = 'zenparams_cmd_v2'
 PALETTE_ID = 'zenparams_palette_v8'
@@ -56,6 +57,17 @@ class DocumentActivatedHandler(adsk.core.DocumentEventHandler):
 
         except: pass
 
+class CommandTerminatedHandler(adsk.core.ApplicationCommandEventHandler):
+    def notify(self, args):
+        global _palette_handler
+        # Filter for relevant commands to avoid spamming
+        # e.g. 'RenameCommand', 'Extrusion', 'Fillet'
+        # For now, we pass everything to the handler to decide
+        try:
+             if _palette_handler:
+                 _palette_handler.on_command_terminated(args)
+        except: pass
+
 class CommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
     def notify(self, args):
         try: show_palette(toggle=True)
@@ -66,7 +78,7 @@ class CommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
 # -----------------------------------------------------------------------------
 
 def show_palette(toggle=False):
-    global _ui, _handlers
+    global _ui, _handlers, _palette_handler
     
     palette = _ui.palettes.itemById(PALETTE_ID)
     if not palette:
@@ -88,9 +100,10 @@ def show_palette(toggle=False):
     on_html_event = ZenPaletteEventHandler(PALETTE_ID, APP_PATH)
     palette.incomingFromHTML.add(on_html_event)
     _handlers.append(on_html_event) # Keep alive
+    _palette_handler = on_html_event # Store for background events
 
 def run(context):
-    global _app, _ui
+    global _app, _ui, _palette_handler
     try:
         _app = adsk.core.Application.get()
         _ui = _app.userInterface
@@ -127,6 +140,11 @@ def run(context):
         on_doc = DocumentActivatedHandler()
         _app.documentActivated.add(on_doc)
         _handlers.append(on_doc)
+        
+        # Command Terminated Handler (Background Watcher)
+        on_term = CommandTerminatedHandler()
+        _ui.commandTerminated.add(on_term)
+        _handlers.append(on_term)
         
     except:
         if _ui: _ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))

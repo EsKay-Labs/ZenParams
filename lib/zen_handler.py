@@ -212,6 +212,49 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
         if not suppress:
             self._send_all_params()
 
+    # --- BACKGROUND HANDLERS ---
+    
+    def on_command_terminated(self, args):
+        """
+        Called when any Fusion command finishes.
+        Used for:
+        1. Auto-Sorting new parameters (Hands-Free)
+        2. Detecting Rename events (Future: Body Rename Sync)
+        """
+        try:
+            cmd_def = args.command.parentCommandDefinition
+            cmd_id = cmd_def.id
+            cmd_name = cmd_def.name
+            
+            # log_diag(f"CMD FINISHED: {cmd_name} ({cmd_id})")
+            
+            # TRIGGER 1: GEOMETRY CREATION -> AUTO-SORT
+            # If user did Extrude, Revolve, Fillet, they likely bound a param to a body.
+            # Run Crawler to update tags.
+            creation_cmds = ['Extrude', 'Revolve', 'Hole', 'Fillet', 'Chamfer', 'Sweep', 'Loft', 'Combine']
+            
+            should_sort = False
+            for c in creation_cmds:
+                if c in cmd_name or c in cmd_id:
+                    should_sort = True
+                    break
+            
+            if should_sort:
+                # log_diag("Triggering Auto-Sort...")
+                self._auto_sort_params()
+                self._send_all_params()
+                
+            # TRIGGER 2: RENAME -> SYNC (Future Implementation)
+            # If 'Rename' happened, we should re-crawl or check token map.
+            # For now, simplistic re-crawl is fine.
+            if 'Rename' in cmd_name:
+                 # log_diag("Triggering Rename Sync...")
+                 self._auto_sort_params() # This handles renaming too!
+                 self._send_all_params()
+                 
+        except:
+            pass
+
     # --- HELPERS ---
 
     def _send_initial_data(self):
