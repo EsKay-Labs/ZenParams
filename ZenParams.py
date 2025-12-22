@@ -102,15 +102,15 @@ def show_palette(toggle=False):
         
         try: palette.dockingState = adsk.core.PaletteDockingStates.PaletteDockStateRight
         except: pass
+
+        # Register Event Handler from Lib (ONLY ON CREATION)
+        on_html_event = ZenPaletteEventHandler(PALETTE_ID, APP_PATH)
+        palette.incomingFromHTML.add(on_html_event)
+        _handlers.append(on_html_event) # Keep alive
+        _palette_handler = on_html_event # Store for background events
     else:
         if toggle: palette.isVisible = not palette.isVisible
         else: palette.isVisible = True
-
-    # Register Event Handler from Lib
-    on_html_event = ZenPaletteEventHandler(PALETTE_ID, APP_PATH)
-    palette.incomingFromHTML.add(on_html_event)
-    _handlers.append(on_html_event) # Keep alive
-    _palette_handler = on_html_event # Store for background events
 
 def run(context):
     global _app, _ui, _palette_handler
