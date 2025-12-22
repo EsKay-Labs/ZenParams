@@ -38,7 +38,7 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             
             # TRG 2: DIMENSION/USAGE -> SORT ONLY (FAST)
             # If sketch dimension added, map is valid, just re-scan usage.
-            usage_cmds = ['Dimension', 'Sketch', 'Edit', 'Parameters']
+            usage_cmds = ['Dimension', 'Sketch', 'Edit', 'Parameters', 'Commit', 'Finish', 'Update', 'Compute']
             
             is_geo = any(x in cmd_name or x in cmd_id for x in geometry_cmds)
             is_usage = any(x in cmd_name or x in cmd_id for x in usage_cmds)
@@ -263,8 +263,14 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             design = adsk.fusion.Design.cast(app.activeProduct)
             p = design.userParameters.itemByName(name)
             if p: 
-                p.deleteMe()
-                args.returnData = json.dumps({'status': 'success', 'msg': 'Deleted'})
+                try:
+                    p.deleteMe()
+                    args.returnData = json.dumps({'status': 'success', 'msg': 'Deleted'})
+                except Exception as e:
+                    # Provide usage clues
+                    deps = p.dependentDependencies
+                    us_msg = f"Used by {deps.count} items" if deps else str(e)
+                    args.returnData = json.dumps({'status': 'error', 'msg': f"Cannot delete: {us_msg}"})
             else:
                 args.returnData = json.dumps({'status': 'error', 'msg': 'Not found'})
         except Exception as e:
@@ -303,6 +309,7 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
         self._send_response(payload, 'init_all')
 
     def _send_all_params(self):
+        adsk.doEvents() # Flush pending updates before read
         pl = self._get_param_list()
         self._send_response(pl, 'update_table')
 
