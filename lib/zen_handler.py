@@ -29,9 +29,10 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             cmd_id = cmd_def.id
             cmd_name = cmd_def.name
             
-            # log_diag(f"CMD FINISHED: {cmd_name} ({cmd_id})")
+            # Debug: See what commands are firing
+            log_diag(f"Cmd Terminated: {cmd_name} [{cmd_id}]")
             
-            # TRG 1: GEOMETRY CREATION -> REFRESH MAP + SORT
+            # TRG 1: GEOMETRY CREATION -> MAP REFRESH & SORT
             # If new bodies/features created, we must rebuild the map.
             geometry_cmds = ['Extrude', 'Revolve', 'Hole', 'Fillet', 'Chamfer', 'Sweep', 'Loft', 'Combine', 'Thicken', 'Pattern', 'Mirror']
             
