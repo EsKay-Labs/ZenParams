@@ -644,7 +644,9 @@ document.addEventListener("DOMContentLoaded", function () {
   // WATCHDOG LOOP removed - window.response now at global scope (top of file)
 
   var lastDocId = "";
+  var lastDataVersion = -1; // Track Python's _data_version
 
+  // Tab Change Detection (every 2.5s)
   setInterval(function () {
     try {
       var promise = adsk.fusionSendData(
@@ -662,6 +664,7 @@ document.addEventListener("DOMContentLoaded", function () {
                   console.log("[ZP] Tab Change Detected! Refreshing...");
                   setStatus("Syncing...", "info");
                   requestData();
+                  lastDataVersion = -1; // Reset version on tab change
                 }
                 lastDocId = info.id;
               }
@@ -670,7 +673,35 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       }
     } catch (e) {}
-  }, 2500); // Check every 2.5s (Less aggressive)
+  }, 2500);
+
+  // DATA VERSION POLLING (fast sync using request/response pattern)
+  // Python increments _data_version when auto-sort runs. We poll for changes.
+  setInterval(function () {
+    try {
+      var promise = adsk.fusionSendData(
+        "send",
+        JSON.stringify({ action: "get_data_version", data: {} })
+      );
+      if (promise && promise.then) {
+        promise.then(function (resp) {
+          if (resp) {
+            try {
+              var info = JSON.parse(resp);
+              if (info && typeof info.version === "number") {
+                // If version changed, refresh the table!
+                if (lastDataVersion >= 0 && info.version !== lastDataVersion) {
+                  console.log("[ZP] Data Version Changed! Refreshing...");
+                  requestData();
+                }
+                lastDataVersion = info.version;
+              }
+            } catch (e) {}
+          }
+        });
+      }
+    } catch (e) {}
+  }, 1000); // Check every 1s for fast sync
 
   // Preset Selection
 

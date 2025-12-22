@@ -16,6 +16,7 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
         self.preset_manager = PresetManager(root_path)
         self.fit_manager = FitManager(root_path)
         self.crawler = None # Persistent Crawler Instance
+        self._data_version = 0 # Incremented when data changes (for JS polling)
 
     # --- BACKGROUND HANDLERS ---
     
@@ -117,6 +118,7 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             
             if count > 0:
                 log_diag(f"Auto-Sort: {count} updated.")
+                self._data_version += 1 # Signal JS to refresh
                 adsk.doEvents()
                 time.sleep(0.25) # Wait for Fusion to commit changes
                 self._send_notification(f"Auto-sorted {count} params", "success")
@@ -163,6 +165,8 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                 self._handle_save_fit_defaults(data, args)
             elif action == 'get_active_doc_info':
                 self._handle_get_doc_info(data, args)
+            elif action == 'get_data_version':
+                args.returnData = json.dumps({'version': self._data_version})
                 
         except Exception as e:
             self._send_error(f"Event Handler Error: {e}")
