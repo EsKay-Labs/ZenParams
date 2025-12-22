@@ -318,7 +318,12 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             log_diag(f"Auto-Sort Complete. Updated: {count}")
 
             if count > 0:
+                adsk.doEvents() # Ensure changes propagate
                 self._send_notification(f"Auto-sorted {count} params", "success")
+                
+                # Double check verify?
+                # new_list = self._get_param_list()
+                # log_diag(f"Verifying... First item group: {new_list[0].get('group') if new_list else 'None'}")
             else:
                 self._send_notification("No new associations found.", "info")
                 
