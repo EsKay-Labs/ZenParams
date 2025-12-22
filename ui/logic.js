@@ -168,6 +168,52 @@ function fillTable(params) {
   attachEnterHandlers();
 }
 
+// Real-time search filter
+function filterTable(query) {
+  var q = query.toLowerCase().trim();
+  var tbody = document.querySelector("#param-table tbody");
+  if (!tbody) return;
+
+  // Get all rows (both group headers and data rows)
+  var allRows = tbody.querySelectorAll("tr");
+  var groupVisibility = {}; // Track if group has visible items
+
+  allRows.forEach(function (row) {
+    if (row.classList.contains("group-header-row")) {
+      // Skip headers on first pass, we'll handle them after
+      return;
+    }
+
+    // Data rows
+    var nameInput = row.querySelector(".name");
+    var exprInput = row.querySelector(".expr");
+    var commentInput = row.querySelector(".comment");
+
+    var name = nameInput ? nameInput.value.toLowerCase() : "";
+    var expr = exprInput ? exprInput.value.toLowerCase() : "";
+    var comment = commentInput ? commentInput.value.toLowerCase() : "";
+    var group = row.dataset.group || "";
+
+    var match =
+      q === "" || name.includes(q) || expr.includes(q) || comment.includes(q);
+    row.style.display = match ? "" : "none";
+
+    // Track group visibility
+    if (match) {
+      groupVisibility[group] = true;
+    }
+  });
+
+  // Now toggle group headers based on visibility
+  allRows.forEach(function (row) {
+    if (row.classList.contains("group-header-row")) {
+      var gName = row.dataset.group || "";
+      var hasVisible = groupVisibility[gName] || false;
+      row.style.display = q === "" || hasVisible ? "" : "none";
+    }
+  });
+}
+
 function attachDeleteHandlers(context) {
   var btns = (context || document).querySelectorAll(".row-delete");
   btns.forEach(function (btn) {
@@ -476,6 +522,14 @@ document.addEventListener("DOMContentLoaded", function () {
       helpModal.style.display = "none";
     }
   };
+
+  // Search Filter
+  var searchInput = document.getElementById("param-search");
+  if (searchInput) {
+    searchInput.oninput = function () {
+      filterTable(searchInput.value);
+    };
+  }
 
   // Add Row
   if (addRowBtn) {

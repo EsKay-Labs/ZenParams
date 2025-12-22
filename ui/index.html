@@ -100,6 +100,28 @@
         font-weight: 500;
       }
 
+      /* Search Bar */
+      .search-container {
+        margin-bottom: 8px;
+      }
+      #param-search {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #3e3e42;
+        border-radius: 4px;
+        background: #252526;
+        color: #cccccc;
+        font-size: 13px;
+        box-sizing: border-box;
+      }
+      #param-search:focus {
+        outline: none;
+        border-color: #007acc;
+      }
+      #param-search::placeholder {
+        color: #666;
+      }
+
       /* Table */
       .table-container {
         flex-grow: 1;
@@ -426,6 +448,16 @@
       <!-- Current Status -->
       <div class="current-status">
         Active: <span id="current-preset-name">New Design</span>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="search-container">
+        <input
+          type="text"
+          id="param-search"
+          placeholder="🔍 Search parameters..."
+          autocomplete="off"
+        />
       </div>
 
       <!-- Parameter Table -->
