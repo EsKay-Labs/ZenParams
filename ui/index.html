@@ -174,7 +174,22 @@
         border-bottom: 1px solid #2d2d2d;
         white-space: nowrap; /* Keep content on one line */
       }
-      /* Only delete column is fixed, rest auto-size to content */
+      /* Column-specific widths - Force compact fit */
+      td:nth-child(1),
+      td:nth-child(2),
+      td:nth-child(3) {
+        width: 1%;
+        white-space: nowrap;
+      }
+      /* Comment takes remaining space */
+      td:nth-child(4) {
+        width: auto;
+        max-width: 0; /* Crucial for overflow:hidden to work in flex-like tables */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      /* Only delete column is fixed */
       td:nth-child(5) {
         width: 24px;
         padding: 0;

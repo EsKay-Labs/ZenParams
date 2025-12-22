@@ -96,26 +96,30 @@ function fillTable(params) {
     var headerRow = document.createElement("tr");
     var td = document.createElement("td");
     td.colSpan = 5;
-    td.className = "group-header collapsed"; // Default Closed
+    td.className = "group-header-cell"; // New class for cell
+    td.style.padding = "0";
+    td.style.border = "none";
 
-    // Add data-category for CSS styling
-    td.setAttribute("data-category", gName);
+    var div = document.createElement("div");
+    div.className = "group-header collapsed"; // Style applied to div
+    div.setAttribute("data-category", gName); // Style hook
 
     // Count of params in this group
     var count = groups[gName].length;
-    td.innerHTML =
+    div.innerHTML =
       '<span class="group-toggle">►</span> ' +
       gName +
       ' <span class="group-count">(' +
       count +
       ")</span>";
 
-    td.onclick = function () {
-      td.classList.toggle("collapsed");
-      var isClosed = td.classList.contains("collapsed");
+    // Click handler
+    div.onclick = function () {
+      div.classList.toggle("collapsed");
+      var isClosed = div.classList.contains("collapsed");
 
       // Toggle Icon
-      var toggle = td.querySelector(".group-toggle");
+      var toggle = div.querySelector(".group-toggle");
       if (toggle) toggle.innerText = isClosed ? "►" : "▼";
 
       var rows = document.querySelectorAll(
@@ -129,6 +133,8 @@ function fillTable(params) {
         }
       });
     };
+
+    td.appendChild(div);
     headerRow.appendChild(td);
     tbody.appendChild(headerRow);
 
