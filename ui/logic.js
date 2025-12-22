@@ -57,15 +57,21 @@ function fillTable(params) {
     var headerRow = document.createElement("tr");
     var td = document.createElement("td");
     td.colSpan = 5;
-    td.className = "group-header";
-    td.innerHTML = '<span class="group-toggle">▼</span> ' + gName;
+    td.className = "group-header collapsed"; // Default Closed
+    td.innerHTML = '<span class="group-toggle">►</span> ' + gName; // Default Closed Icon
     td.onclick = function () {
       td.classList.toggle("collapsed");
+      var isClosed = td.classList.contains("collapsed");
+
+      // Toggle Icon
+      var toggle = td.querySelector(".group-toggle");
+      if (toggle) toggle.innerText = isClosed ? "►" : "▼";
+
       var rows = document.querySelectorAll(
         '.group-row[data-group="' + gName + '"]'
       );
       rows.forEach(function (r) {
-        if (td.classList.contains("collapsed")) {
+        if (isClosed) {
           r.classList.add("hidden-row");
         } else {
           r.classList.remove("hidden-row");
@@ -78,7 +84,7 @@ function fillTable(params) {
     // Param Rows
     groups[gName].forEach(function (p) {
       var tr = document.createElement("tr");
-      tr.className = "group-row";
+      tr.className = "group-row hidden-row"; // Default Hidden
       tr.dataset.group = gName;
 
       if (p.isUser) {
