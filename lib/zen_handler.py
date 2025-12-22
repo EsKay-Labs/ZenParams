@@ -151,6 +151,10 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
 
     def _handle_get_initial_data(self, data, args):
         try:
+            # Auto-Sort on Startup (User Request)
+            log_diag("Startup: Running Auto-Sort...")
+            self._auto_sort_params(force_map_refresh=True)
+            
             payload = self._gather_payload_dict()
             args.returnData = json.dumps({'content': payload, 'type': 'init_all'})
         except Exception as e:
