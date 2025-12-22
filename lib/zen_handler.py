@@ -342,6 +342,7 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
     def _send_all_params(self):
         adsk.doEvents() # Flush pending updates before read
         pl = self._get_param_list()
+        log_diag(f"Sending {len(pl)} params to UI...")
         self._send_response(pl, 'update_table')
 
     def _send_notification(self, message, status):
