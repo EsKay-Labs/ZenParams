@@ -139,12 +139,14 @@ class ZenDependencyCrawler:
                     # Single Profile
                     if isinstance(profile, adsk.fusion.Profile):
                         self._map_entity(profile.parentSketch, body_name)
+                        log_diag(f"    Mapped Sketch {profile.parentSketch.entityToken[:5]}... -> {body_name}")
                     # Profile Collection
                     elif hasattr(profile, 'count'): 
                         for k in range(profile.count):
                             item = profile.item(k)
                             if isinstance(item, adsk.fusion.Profile):
                                 self._map_entity(item.parentSketch, body_name)
+                                log_diag(f"    Mapped Sketch {item.parentSketch.entityToken[:5]}... -> {body_name}")
                                 
             # 2. Hole Feature (Uses sketchPoints)
             if isinstance(feat, adsk.fusion.HoleFeature):
