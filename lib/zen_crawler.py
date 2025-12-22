@@ -10,6 +10,13 @@ class ZenDependencyCrawler:
     def __init__(self, design):
         self.design = design
         self.entity_map = {} # { entity_token: set(body_names) }
+        self.refresh_map()
+
+    def refresh_map(self):
+        """
+        Rebuilds the reverse map. Call this when new geometry is created.
+        """
+        self.entity_map = {}
         self._build_reverse_map()
 
     def get_param_body_name(self, param):
