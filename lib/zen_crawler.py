@@ -137,12 +137,21 @@ class ZenDependencyCrawler:
                 # Even if not extruded yet, it belongs to that Body.
                 if isinstance(feat, adsk.fusion.Sketch):
                     try:
+                        is_mapped = False
                         plane = feat.referencePlane
                         if isinstance(plane, adsk.fusion.BRepFace):
                             body = plane.body
                             if body and body.isValid:
                                 self._map_entity(feat, body.name)
                                 log_diag(f"  Mapped Sketch-on-Face {feat.name} -> {body.name}")
+                                is_mapped = True
+                        
+                        # Fallback: Map to component (e.g. Sketch on Origin Plane)
+                        if not is_mapped and feat.parentComponent:
+                            comp_name = feat.parentComponent.name
+                            self._map_entity(feat, comp_name)
+                            log_diag(f"  Mapped Sketch (Generic) {feat.name} -> {comp_name}")
+
                     except: pass
             
             log_diag(f"Crawler Map Built: {len(self.entity_map)} entities mapped.")
