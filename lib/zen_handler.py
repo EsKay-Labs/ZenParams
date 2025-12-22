@@ -5,6 +5,7 @@ import traceback
 import time
 import re
 from .zen_utils import log_diag, PresetManager
+from .zen_crawler import ZenDependencyCrawler
 
 class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
     """Handles messages coming from the HTML Palette."""
@@ -30,7 +31,8 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                 'set_current_preset': self._handle_set_current_preset,
                 'delete_param': self._handle_delete_param,
                 'close_palette': self._handle_close_palette,
-                'refresh': self._handle_refresh
+                'refresh': self._handle_refresh,
+                'auto_sort': self._auto_sort_params
             }
             
             handler = dispatch_map.get(action)

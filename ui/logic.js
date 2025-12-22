@@ -429,6 +429,15 @@ document.addEventListener("DOMContentLoaded", function () {
     };
   }
 
+  // Auto Sort
+  var sortBtn = document.getElementById("sort-btn");
+  if (sortBtn) {
+    sortBtn.onclick = function () {
+      setStatus("Crawling dependencies... (this may take a moment)", "info");
+      sendToFusion("auto_sort", {});
+    };
+  }
+
   // --- SMART FIT LOGIC ---
   var fitBtn = document.getElementById("fit-btn");
   var fitModal = document.getElementById("fit-modal");
