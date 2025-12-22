@@ -28,11 +28,12 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
         cmd_id = "Unknown"
         cmd_name = "Unknown"
         try:
-            if args and args.command:
-                cmd_def = args.command.parentCommandDefinition
-                if cmd_def:
-                    cmd_id = cmd_def.id or "NoID"
-                    cmd_name = cmd_def.name or "NoName"
+            # NOTE: For commandTerminated, use args.commandDefinition DIRECTLY
+            # (NOT args.command.parentCommandDefinition, that's for CommandCreatedEventHandler)
+            if args and args.commandDefinition:
+                cmd_def = args.commandDefinition
+                cmd_id = cmd_def.id or "NoID"
+                cmd_name = cmd_def.name or "NoName"
         except Exception as e:
             log_diag(f"CMD Extract Error: {e}")
             return # Can't proceed without command info
