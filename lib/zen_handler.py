@@ -34,6 +34,7 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
 
             # Debug: See what commands are firing (SAFE)
             log_file(f"Cmd Terminated: {cmd_name} [{cmd_id}]")
+            log_diag(f"CMD: {cmd_name} [{cmd_id}]") # Visual Confirmation
             
             # TRG 1: GEOMETRY CREATION -> MAP REFRESH & SORT
             # If new bodies/features created, we must rebuild the map.
