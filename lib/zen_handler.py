@@ -286,29 +286,58 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             self._send_all_params()
 
     def _handle_delete_param(self, data, args):
+        """
+        Safe parameter deletion with pre-validation.
+        Checks dependencies BEFORE attempting delete.
+        """
         name = data.get('name')
-        log_diag(f"Attempting to delete: {name}")
+        log_diag(f"Delete Request: {name}")
+        
         try:
             app = adsk.core.Application.get()
             design = adsk.fusion.Design.cast(app.activeProduct)
-            p = design.userParameters.itemByName(name)
-            if p: 
-                try:
-                    p.deleteMe()
-                    log_diag(f"Deleted {name}")
-                    args.returnData = json.dumps({'status': 'success', 'msg': 'Deleted'})
-                except Exception as e:
-                    # Provide usage clues
-                    deps = p.dependentDependencies
-                    count = deps.count if deps else 0
-                    log_diag(f"Delete Failed: Used by {count} items. Err: {e}")
-                    us_msg = f"Used by {count} items" if deps else str(e)
-                    args.returnData = json.dumps({'status': 'error', 'msg': f"Cannot delete: {us_msg}"})
-            else:
-                log_diag(f"Delete Failed: {name} not found")
-                args.returnData = json.dumps({'status': 'error', 'msg': 'Not found'})
+            if not design:
+                args.returnData = json.dumps({'status': 'error', 'msg': 'No active design'})
+                return
+                
+            # Find parameter
+            param = design.userParameters.itemByName(name)
+            if not param:
+                args.returnData = json.dumps({'status': 'error', 'msg': f"'{name}' not found"})
+                return
+            
+            # PRE-CHECK: Gather dependencies before attempting delete
+            deps = param.dependentDependencies
+            dep_names = []
+            if deps:
+                for i in range(deps.count):
+                    try:
+                        dep = deps.item(i)
+                        dep_name = dep.name if hasattr(dep, 'name') else type(dep).__name__
+                        dep_names.append(dep_name)
+                    except: pass
+            
+            if dep_names:
+                msg = f"Used by: {', '.join(dep_names[:5])}"
+                if len(dep_names) > 5:
+                    msg += f" (+{len(dep_names) - 5} more)"
+                log_diag(f"Delete Blocked: {name} -> {msg}")
+                args.returnData = json.dumps({'status': 'error', 'msg': f"Cannot delete: {msg}"})
+                return
+            
+            # SAFE TO DELETE
+            try:
+                param.deleteMe()
+                self._data_version += 1  # Trigger UI sync
+                adsk.doEvents()
+                log_diag(f"Deleted: {name}")
+                args.returnData = json.dumps({'status': 'success', 'msg': f"Deleted '{name}'"})
+            except Exception as e:
+                log_diag(f"Delete Failed (Fusion): {e}")
+                args.returnData = json.dumps({'status': 'error', 'msg': f"Fusion error: {str(e)}"})
+                
         except Exception as e:
-            log_diag(f"Delete Handler Critical Error: {e}")
+            log_diag(f"Delete Critical Error: {e}")
             args.returnData = json.dumps({'status': 'error', 'msg': str(e)})
 
     def _handle_close_palette(self, data, args):
