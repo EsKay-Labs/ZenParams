@@ -97,7 +97,19 @@ function fillTable(params) {
     var td = document.createElement("td");
     td.colSpan = 5;
     td.className = "group-header collapsed"; // Default Closed
-    td.innerHTML = '<span class="group-toggle">►</span> ' + gName; // Default Closed Icon
+
+    // Add data-category for CSS styling
+    td.setAttribute("data-category", gName);
+
+    // Count of params in this group
+    var count = groups[gName].length;
+    td.innerHTML =
+      '<span class="group-toggle">►</span> ' +
+      gName +
+      ' <span class="group-count">(' +
+      count +
+      ")</span>";
+
     td.onclick = function () {
       td.classList.toggle("collapsed");
       var isClosed = td.classList.contains("collapsed");

@@ -271,32 +271,59 @@
         font-style: italic;
       }
 
-      /* Group Headers */
+      /* Group Headers - Full Width Prominent Bars */
       .group-header {
-        background: #2d2d2d;
-        color: #eee;
-        padding: 6px 8px;
+        background: linear-gradient(135deg, #2a3a4a 0%, #1e2832 100%);
+        color: #fff;
+        padding: 10px 14px;
         font-weight: 600;
+        font-size: 13px;
+        letter-spacing: 0.5px;
         cursor: pointer;
         display: flex;
         align-items: center;
+        border-left: 4px solid #4ec9b0;
         border-bottom: 1px solid #3e3e42;
-        border-top: 1px solid #3e3e42;
+        margin-top: 4px;
         user-select: none;
+        transition: background 0.15s, border-color 0.15s;
       }
       .group-header:first-child {
-        border-top: none;
+        margin-top: 0;
       }
       .group-header:hover {
-        background: #383838;
+        background: linear-gradient(135deg, #354a5e 0%, #283440 100%);
+      }
+      /* Category-specific accent colors */
+      .group-header[data-category="Unused"] {
+        border-left-color: #888;
+        background: linear-gradient(135deg, #333 0%, #252526 100%);
+      }
+      .group-header[data-category="Shared"] {
+        border-left-color: #dcdcaa;
+        background: linear-gradient(135deg, #3a3520 0%, #2a2810 100%);
+      }
+      .group-header[data-category="Model Parameters"] {
+        border-left-color: #666;
+        background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
       }
       .group-toggle {
-        margin-right: 8px;
-        font-size: 10px;
-        transition: transform 0.2s;
+        margin-right: 10px;
+        font-size: 12px;
+        opacity: 0.7;
+        transition: transform 0.2s, opacity 0.2s;
+      }
+      .group-header:hover .group-toggle {
+        opacity: 1;
       }
       .group-header.collapsed .group-toggle {
         transform: rotate(-90deg);
+      }
+      .group-count {
+        margin-left: auto;
+        font-size: 11px;
+        color: #888;
+        font-weight: 400;
       }
       .hidden-row {
         display: none;
