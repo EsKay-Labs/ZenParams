@@ -90,6 +90,10 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                 
                 # Crawl
                 body_name = crawler.get_param_body_name(param)
+                
+                # Clean up "Unsaved" root name
+                if body_name == '(Unsaved)': body_name = 'Main Design'
+                
                 if body_name:
                     # Update Comment: "[BodyName] Original Comment"
                     new_comment = f"[{body_name}] {comment}"
@@ -97,6 +101,8 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                     count += 1
                     adsk.doEvents() # Prevent race condition
                     log_diag(f"  Sorted {param.name} -> {body_name}")
+                # else:
+                #     log_diag(f"  Unsorted: {param.name} (No usage found)")
             
             if count > 0:
                 log_diag(f"Auto-Sort: {count} updated.")

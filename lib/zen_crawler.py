@@ -80,7 +80,8 @@ class ZenDependencyCrawler:
                         # See if it belongs to a sub-component (not Root).
                         comp = creator.parentComponent
                         root = self.design.rootComponent
-                        if comp and comp.name != root.name:
+                        if comp:
+                             # Allow Root Component Mapping (e.g. for sketches on origin)
                              driven_bodies.add(comp.name)
                              log_diag(f"  FALLBACK: {target_name} -> Component '{comp.name}'")
                         elif target_token:
