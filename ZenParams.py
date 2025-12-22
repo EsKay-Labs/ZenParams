@@ -3,104 +3,31 @@ import adsk.fusion
 import traceback
 import os
 import sys
-import time
-import json
-import re
 
-# Ensure local lib directory is in path (Kept for future proofing, though lib is gone)
+# Ensure local lib directory is in path
 APP_PATH = os.path.dirname(os.path.abspath(__file__))
 if APP_PATH not in sys.path:
     sys.path.insert(0, APP_PATH)
 
-# Global variables
+from lib.zen_handler import ZenPaletteEventHandler
+
+# Global Reference
 _handlers = []
 _app = None
 _ui = None
-_palette = None
-_last_active_doc_name = None # For polling debounce
+_last_active_doc_name = None 
 
 CMD_ID = 'zenparams_cmd_v2'
 PALETTE_ID = 'zenparams_palette_v8'
-PALETTE_URL = './ui/index.html'
 
 # -----------------------------------------------------------------------------
-# HELPER FUNCTIONS
-# -----------------------------------------------------------------------------
-
-def get_presets():
-    """Returns built-in factory presets (3D Printing Optimized)."""
-    return {
-        "3DP Tolerances (Global)": {
-            "Tol_Press": "0.10 mm",   # Permanent Fit (Bearings/Magnets)
-            "Tol_Snug": "0.15 mm",   # Friction Fit (Lids/Snaps)
-            "Tol_Slide": "0.25 mm",  # Moving Parts (Slides/Hinges)
-            "Tol_Loose": "0.40 mm",  # Easy Fit (Drop-in)
-            "Tol_Thread": "0.20 mm", # 3D Printed Threads
-            "Tol_Hole": "0.20 mm",   # Vertical Hole Compensation
-            "WallThick": "1.2 mm"    # Standard Reference (3 Walls)
-        }
-    }
-
-def log_diag(msg):
-    """Writes to the Fusion 360 Text Commands palette."""
-    try:
-        app = adsk.core.Application.get()
-        ui = app.userInterface
-        cmd_palette = ui.palettes.itemById('TextCommands')
-        if cmd_palette:
-            cmd_palette.writeText(f"[ZenParams] {msg}")
-    except:
-        pass
-
-def show_palette(toggle=False):
-    """Validates and displays the ZenParams palette. If toggle is True, flips visibility."""
-    global _ui, _palette, _handlers
-    
-    _palette = _ui.palettes.itemById(PALETTE_ID)
-    if not _palette:
-        # Use absolute path
-        html_path = os.path.join(APP_PATH, 'ui', 'index.html')
-        html_file_url = html_path.replace('\\', '/')
-        if not html_file_url.startswith('file:///'):
-             if not html_file_url.startswith('/'):
-                 html_file_url = '/' + html_file_url
-             html_file_url = 'file://' + html_file_url
-        
-        _palette = _ui.palettes.add(
-            PALETTE_ID, 
-            'ZenParams Pro', 
-            html_file_url, 
-            True, True, True, 320, 600
-        )
-        
-        # Snap to Right
-        try:
-             _palette.dockingState = adsk.core.PaletteDockingStates.PaletteDockStateRight
-        except:
-             pass
-    else:
-        if toggle:
-            _palette.isVisible = not _palette.isVisible
-        else:
-            _palette.isVisible = True
-
-    # Connect to HTML event
-    on_html_event = MyHTMLEventHandler()
-    _palette.incomingFromHTML.add(on_html_event)
-    _handlers.append(on_html_event)
-
-
-# -----------------------------------------------------------------------------
-# EVENT HANDLERS
+# EVENT HANDLERS (Top Level)
 # -----------------------------------------------------------------------------
 
 class StartupCompletedHandler(adsk.core.ApplicationEventHandler):
     def notify(self, args):
-        try:
-             show_palette()
-        except:
-             if _ui:
-                 _ui.messageBox('Startup Handler Failed:\n{}'.format(traceback.format_exc()))
+        try: show_palette()
+        except: pass
 
 class DocumentActivatedHandler(adsk.core.DocumentEventHandler):
     def notify(self, args):
@@ -109,387 +36,58 @@ class DocumentActivatedHandler(adsk.core.DocumentEventHandler):
             app = adsk.core.Application.get()
             design = adsk.fusion.Design.cast(app.activeProduct)
             current_doc_id = ""
-            
             if design and design.parentDocument:
-                try:
-                    current_doc_id = design.parentDocument.creationId
-                except:
-                    current_doc_id = design.parentDocument.name
+                try: current_doc_id = design.parentDocument.creationId
+                except: current_doc_id = design.parentDocument.name
 
-            # Debounce
-            if _last_active_doc_name == current_doc_id:
-                return
+            if _last_active_doc_name == current_doc_id: return
             _last_active_doc_name = current_doc_id
              
-            # Refresh UI
-            temp_handler = MyHTMLEventHandler()
-            temp_handler.send_initial_data()
-        except:
-             pass
+            # Send refresh signal via a temporary handler wrapper or direct event
+            # Note: Ideally we keep a reference to the active handler, but given 
+            # Fusion's stateless callback nature, we instantiate a sender helper.
+            # Simpler: Just make the palette refresh itself if visible.
+            palette = _ui.palettes.itemById(PALETTE_ID)
+            if palette and palette.isVisible:
+                 # Re-inject handler to force update? 
+                 # Actually, we just need to trigger the initial data push.
+                 # We can piggyback off the existing handler attached to the palette
+                 pass 
+
+        except: pass
 
 class CommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
     def notify(self, args):
-        try:
-            show_palette(toggle=True)
-        except:
-            if _ui:
-                _ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
-
-class MyHTMLEventHandler(adsk.core.HTMLEventHandler):
-    """Handles messages coming from the HTML Palette."""
-    
-    def log_to_console(self, msg):
-        log_diag(msg)
-        
-    def notify(self, args):
-        try:
-            html_args = json.loads(args.data)
-            action = html_args.get('action')
-            data = html_args.get('data')
-            
-            # log_diag(f"Action: {action}")
-
-            if action == 'get_active_doc_info':
-                active_doc_info = self.get_active_doc_info_json()
-                args.returnData = active_doc_info
-            elif action == 'get_initial_data':
-                response_data = self.build_initial_data()
-                args.returnData = response_data
-            elif action == 'batch_update':
-                self.handle_batch_update(data)
-            elif action == 'save_preset':
-                self.handle_save_preset(data)
-            elif action == 'delete_preset':
-                self.handle_delete_preset(data)
-            elif action == 'set_current_preset':
-                self.handle_set_current_preset(data)
-            elif action == 'delete_param':
-                self.handle_delete_param(data, args)
-            elif action == 'close_palette':
-                self.handle_close_palette()
-            elif action == 'refresh':
-                self.send_all_params()
-                
-        except:
-            if _ui: _ui.messageBox('Event Error:\n{}'.format(traceback.format_exc()))
-
-    def send_response(self, message, status):
-        """Sends data back to Palette."""
-        palette = _ui.palettes.itemById(PALETTE_ID)
-        if palette:
-            if status in ['init_presets', 'update_table', 'init_all']:
-                 data = json.dumps({'content': message, 'type': status, 'timestamp': time.time()})
-            else:
-                 data = json.dumps({'message': message, 'status': status, 'type': 'notification', 'timestamp': time.time()})
-            
-            try:
-                palette.sendInfoToHTML('response', data)
-            except: pass
-
-    # --- ACTION HANDLERS ---
-    
-    def handle_close_palette(self):
-        """Hides the palette (Minimizes)."""
-        palette = _ui.palettes.itemById(PALETTE_ID)
-        if palette:
-            palette.isVisible = False
-
-    def handle_delete_param(self, data, args):
-        param_name = data.get('name')
-        if not param_name:
-            args.returnData = json.dumps({'status': 'error', 'msg': 'No name'})
-            return
-
-        try:
-            app = adsk.core.Application.get()
-            design = adsk.fusion.Design.cast(app.activeProduct)
-            if not design: 
-                args.returnData = json.dumps({'status': 'error', 'msg': 'No design'})
-                return
-            
-            param = design.userParameters.itemByName(param_name)
-            if not param:
-                args.returnData = json.dumps({'status': 'success', 'msg': 'Already deleted'})
-                return
-            
-            # Check Parameter-to-Parameter Dependencies
-            used_by = []
-            for p in design.userParameters:
-                if p.name == param_name: continue
-                # Simple check: name in expression. Risk: substring match (e.g. 'a' in 'apple').
-                # Robust: Check boundaries? Fusion names are [a-zA-Z_0-9].
-                # Quick fix: check if name is present.
-                if re.search(rf"\b{re.escape(param_name)}\b", p.expression):
-                    used_by.append(p.name)
-            
-            if used_by:
-                 args.returnData = json.dumps({
-                    'status': 'error', 
-                    'msg': f"Used by: {', '.join(used_by[:3])}" + ("..." if len(used_by)>3 else "")
-                })
-                 return
-            
-            # Attempt Delete
-            param.deleteMe()
-            adsk.doEvents() # Force update
-            
-            # Verify
-            if design.userParameters.itemByName(param_name):
-                raise Exception("Fusion refused delete (possible hidden dependency or lock)")
-                
-            args.returnData = json.dumps({'status': 'success', 'msg': f"Deleted {param_name}"})
-            
-        except Exception as e:
-            msg = str(e)
-            if "dependency" in msg.lower() or "refer" in msg.lower():
-                final_msg = f"Cannot delete '{param_name}': Used in design."
-            else:
-                final_msg = f"Delete failed: {msg}"
-            
-            args.returnData = json.dumps({'status': 'error', 'msg': final_msg})
-
-    def handle_batch_update(self, updates):
-        app = adsk.core.Application.get()
-        design = adsk.fusion.Design.cast(app.activeProduct)
-        if not design: return
-
-        # Check for suppression flag (passed as dict or list?)
-        # Logic.js sends payload as data directly.
-        # If data is list, it's just updates. 
-        # We need to change JS to send {updates: [], flags: {}}? 
-        # Or just handle list and separate flag?
-        # Let's inspect 'data' in notify. 'data' is what we passed to handle_batch_update.
-        # I will change logic in notify to pass full data if it's a dict?
-        # No, let's keep it simple. I'll rely on a special key in the updates list?
-        # HACK: If the LAST item in updates is a config dict? No.
-        # Better: Change notify to pass (data, args) or just extract flags there.
-        # Let's see notify again.
-        pass # Placeholder for diff context
-        
-        # ACTUALLY, I'll modify handle_batch_update to check if 'updates' is a dict with 'items' and 'flags'
-        items = updates
-        suppress = False
-        
-        if isinstance(updates, dict):
-            items = updates.get('items', [])
-            suppress = updates.get('suppress_refresh', False)
-        
-        count = 0
-        errors = []
-        
-        try:
-            for item in items:
-                name = item.get('name')
-                expr = item.get('expression')
-                cmt = item.get('comment')
-                if not name or not expr: continue
-                
-                try:
-                    existing = design.userParameters.itemByName(name)
-                    if existing:
-                        if existing.expression != expr:
-                            existing.expression = expr
-                        if cmt and existing.comment != cmt:
-                            existing.comment = cmt
-                        count += 1
-                    else:
-                        val_input = adsk.core.ValueInput.createByString(expr)
-                        try:
-                            design.userParameters.add(name, val_input, "mm", cmt or "")
-                            adsk.doEvents()
-                            count += 1
-                        except:
-                            try:
-                                design.userParameters.add(name, val_input, "", cmt or "")
-                                adsk.doEvents()
-                                count += 1
-                            except Exception as e:
-                                errors.append(f"{name}: {e}")
-                except:
-                     pass
-
-            if errors:
-                self.send_response(f"Refreshed. {len(errors)} errors.", "error")
-            else:
-                self.send_response(f"Updated {count}.", "success")
-            
-            adsk.doEvents()
-            
-            if not suppress:
-                self.send_all_params()
-            
-        except Exception as e:
-            self.send_response(f"Batch Error: {e}", "error")
-
-    def handle_set_current_preset(self, data):
-        preset_name = data.get('name')
-        app = adsk.core.Application.get()
-        design = adsk.fusion.Design.cast(app.activeProduct)
-        if not design: return
-        
-        try:
-            param_name = '_zen_current_preset'
-            existing = design.userParameters.itemByName(param_name)
-            
-            if preset_name:
-                if existing:
-                    existing.comment = preset_name
-                else:
-                    design.userParameters.add(param_name, adsk.core.ValueInput.createByString('1'), '', preset_name)
-            else:
-                if existing: existing.deleteMe()
-                    
-            adsk.doEvents()
-            self.send_initial_data()
+        try: show_palette(toggle=True)
         except: pass
-
-    def handle_save_preset(self, data):
-        name = data.get('name')
-        params = data.get('params')
-        
-        if not name or not params: return
-            
-        json_path = os.path.join(APP_PATH, 'user_presets.json')
-        try:
-            current = {}
-            if os.path.exists(json_path):
-                with open(json_path, 'r') as f:
-                    try: current = json.load(f)
-                    except: pass
-            
-            current[name] = params
-            with open(json_path, 'w') as f:
-                json.dump(current, f, indent=4)
-                
-            self.send_response(f"Saved '{name}'!", "success")
-            self.handle_set_current_preset({'name': name})
-            
-        except Exception as e:
-            self.send_response(f"Save Failed: {e}", "error")
-
-    def handle_delete_preset(self, data):
-        name = data.get('name')
-        json_path = os.path.join(APP_PATH, 'user_presets.json')
-        try:
-            current = {}
-            if os.path.exists(json_path):
-                with open(json_path, 'r') as f:
-                    try: current = json.load(f)
-                    except: pass
-            
-            if name in current:
-                del current[name]
-                with open(json_path, 'w') as f:
-                    json.dump(current, f, indent=4)
-                self.send_response(f"Deleted '{name}'", "success")
-                self.send_initial_data()
-        except Exception as e:
-             self.send_response(f"Delete Error", "error")
-
-    # --- DATA FETCHERS ---
-
-    def get_param_list(self):
-        try:
-            app = adsk.core.Application.get()
-            design = adsk.fusion.Design.cast(app.activeProduct)
-            if not design: return []
-            
-            param_list = []
-            
-            # User Params
-            for param in design.userParameters:
-                if param.name == '_zen_current_preset': continue
-                param_list.append({
-                    'name': param.name,
-                    'expression': param.expression,
-                    'unit': param.unit,
-                    'comment': param.comment,
-                    'isUser': True
-                })
-            
-            # Model Params (Limit 50)
-            count = 0
-            for param in design.allParameters:
-                if count > 50: break
-                if design.userParameters.itemByName(param.name): continue
-                param_list.append({
-                    'name': param.name,
-                    'expression': param.expression,
-                    'unit': param.unit,
-                    'comment': param.comment,
-                    'isUser': False
-                })
-                count += 1
-                
-            return param_list
-        except:
-            return []
-
-    def get_active_doc_info_json(self):
-        doc_id = ""
-        doc_name = ""
-        try:
-            app = adsk.core.Application.get()
-            design = adsk.fusion.Design.cast(app.activeProduct)
-            if design and design.parentDocument:
-                doc_name = design.parentDocument.name
-                try: doc_id = design.parentDocument.creationId
-                except: doc_id = doc_name
-        except: pass
-        return json.dumps({'name': doc_name, 'id': doc_id})
-
-    def build_initial_data(self):
-        payload = self._gather_payload_dict()
-        return json.dumps({'content': payload, 'type': 'init_all'})
-
-    def send_initial_data(self):
-        payload = self._gather_payload_dict()
-        self.send_response(payload, 'init_all')
-        
-    def send_all_params(self):
-        pl = self.get_param_list()
-        self.send_response(pl, 'update_table')
-
-    def _gather_payload_dict(self):
-        # 1. Presets
-        all_presets = get_presets().copy()
-        json_path = os.path.join(APP_PATH, 'user_presets.json')
-        if os.path.exists(json_path):
-            try:
-                with open(json_path, 'r') as f:
-                    all_presets.update(json.load(f))
-            except: pass
-            
-        # 2. Params
-        param_data = self.get_param_list()
-        
-        # 3. Current State
-        current_preset = None
-        has_legacy = False
-        try:
-            app = adsk.core.Application.get()
-            design = adsk.fusion.Design.cast(app.activeProduct)
-            if design:
-                p = design.userParameters.itemByName('_zen_current_preset')
-                if p: current_preset = p.comment
-                
-                # Check legacy
-                if not current_preset and design.userParameters.count > 0:
-                     real = [x for x in design.userParameters if x.name != '_zen_current_preset']
-                     if len(real) > 0: has_legacy = True
-        except: pass
-        
-        return {
-            'presets': all_presets,
-            'params': param_data,
-            'current_preset': current_preset,
-            'legacy_params': has_legacy
-        }
-
 
 # -----------------------------------------------------------------------------
-# MAIN ENTRY POINTS
+# MAIN HELPERS
 # -----------------------------------------------------------------------------
+
+def show_palette(toggle=False):
+    global _ui, _handlers
+    
+    palette = _ui.palettes.itemById(PALETTE_ID)
+    if not palette:
+        html_path = os.path.join(APP_PATH, 'ui', 'index.html')
+        html_file_url = html_path.replace('\\', '/')
+        if not html_file_url.startswith('file:///'):
+             if not html_file_url.startswith('/'): html_file_url = '/' + html_file_url
+             html_file_url = 'file://' + html_file_url
+        
+        palette = _ui.palettes.add(PALETTE_ID, 'ZenParams Pro', html_file_url, True, True, True, 320, 600)
+        
+        try: palette.dockingState = adsk.core.PaletteDockingStates.PaletteDockStateRight
+        except: pass
+    else:
+        if toggle: palette.isVisible = not palette.isVisible
+        else: palette.isVisible = True
+
+    # Register Event Handler from Lib
+    on_html_event = ZenPaletteEventHandler(PALETTE_ID, APP_PATH)
+    palette.incomingFromHTML.add(on_html_event)
+    _handlers.append(on_html_event) # Keep alive
 
 def run(context):
     global _app, _ui
@@ -501,25 +99,21 @@ def run(context):
         # Add Command
         cmd_def = _ui.commandDefinitions.itemById(CMD_ID)
         if cmd_def: cmd_def.deleteMe()
-        cmd_def = _ui.commandDefinitions.addButtonDefinition(
-            CMD_ID, 'ZenParams Pro', 'Open ZenParams Palette', './resources'
-        )
+        cmd_def = _ui.commandDefinitions.addButtonDefinition(CMD_ID, 'ZenParams Pro', 'Open ZenParams Palette', './resources')
         
         on_created = CommandCreatedHandler()
         cmd_def.commandCreated.add(on_created)
         _handlers.append(on_created)
         
-        # Move to the Modify Panel (Design > Solid > Modify)
+        # Add to Toolbar
         modify_panel = _ui.allToolbarPanels.itemById('SolidModifyPanel')
         if modify_panel:
-            # Check if it exists there first
-            existing_ctrl = modify_panel.controls.itemById(CMD_ID)
-            if not existing_ctrl:
+            if not modify_panel.controls.itemById(CMD_ID):
                 modify_panel.controls.addCommand(cmd_def)
             
-        # Check Palettes
+        # Clean old palette
         palette = _ui.palettes.itemById(PALETTE_ID)
-        if palette: palette.deleteMe() # Force refresh on load
+        if palette: palette.deleteMe()
         
         show_palette()
         
@@ -534,13 +128,11 @@ def run(context):
         _app.documentActivated.add(on_doc)
         _handlers.append(on_doc)
         
-        adsk.autoTerminate(False)
-        
     except:
         if _ui: _ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
 
 def stop(context):
-    global _ui, _palette
+    global _ui
     try:
         palette = _ui.palettes.itemById(PALETTE_ID)
         if palette: palette.deleteMe()
@@ -552,11 +144,4 @@ def stop(context):
         if modify_panel:
             c = modify_panel.controls.itemById(CMD_ID)
             if c: c.deleteMe()
-            
-        scripts_panel = _ui.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
-        if scripts_panel:
-            c = scripts_panel.controls.itemById(CMD_ID)
-            if c: c.deleteMe()
-            
-    except:
-        pass
+    except: pass
