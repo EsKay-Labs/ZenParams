@@ -145,6 +145,7 @@ function attachDeleteHandlers(context) {
 
         setStatus("Deleting...", "info");
         sendToFusion("delete_param", { name: name }).then(function (resp) {
+          console.log("[ZP] Delete Response:", resp);
           try {
             var r = JSON.parse(resp);
             if (r.status === "success") {
@@ -155,6 +156,7 @@ function attachDeleteHandlers(context) {
               alert(r.msg);
             }
           } catch (e) {
+            console.error("[ZP] Delete Parse Err:", e);
             setStatus("Err: " + e, "error");
           }
         });

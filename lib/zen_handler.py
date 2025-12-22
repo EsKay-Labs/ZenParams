@@ -258,6 +258,7 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
 
     def _handle_delete_param(self, data, args):
         name = data.get('name')
+        log_diag(f"Attempting to delete: {name}")
         try:
             app = adsk.core.Application.get()
             design = adsk.fusion.Design.cast(app.activeProduct)
@@ -265,15 +266,20 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             if p: 
                 try:
                     p.deleteMe()
+                    log_diag(f"Deleted {name}")
                     args.returnData = json.dumps({'status': 'success', 'msg': 'Deleted'})
                 except Exception as e:
                     # Provide usage clues
                     deps = p.dependentDependencies
-                    us_msg = f"Used by {deps.count} items" if deps else str(e)
+                    count = deps.count if deps else 0
+                    log_diag(f"Delete Failed: Used by {count} items. Err: {e}")
+                    us_msg = f"Used by {count} items" if deps else str(e)
                     args.returnData = json.dumps({'status': 'error', 'msg': f"Cannot delete: {us_msg}"})
             else:
+                log_diag(f"Delete Failed: {name} not found")
                 args.returnData = json.dumps({'status': 'error', 'msg': 'Not found'})
         except Exception as e:
+            log_diag(f"Delete Handler Critical Error: {e}")
             args.returnData = json.dumps({'status': 'error', 'msg': str(e)})
 
     def _handle_close_palette(self, data, args):
