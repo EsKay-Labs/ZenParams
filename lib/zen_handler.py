@@ -106,6 +106,195 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
         # ALWAYS Refresh Table
         self._send_all_params()
 
+    def notify(self, args):
+        try:
+            if not args.data: return
+            html_args = json.loads(args.data)
+            action = html_args.get('action')
+            data = html_args.get('data')
+            
+            if not action: return
+
+            if action == 'get_initial_data':
+                self._handle_get_initial_data(data, args)
+            elif action == 'save_preset':
+                self._handle_save_preset(data, args)
+            elif action == 'apply_preset':
+                self._handle_apply_preset(data, args) # Legacy support if needed
+            elif action == 'delete_preset':
+                self._handle_delete_preset(data, args)
+            elif action == 'set_current_preset':
+                self._handle_set_current_preset(data, args)
+            elif action == 'delete_param':
+                self._handle_delete_param(data, args)
+            elif action == 'batch_update':
+                self._handle_batch_update(data, args)
+            elif action == 'refresh':
+                self._handle_refresh(data, args)
+            elif action == 'close_palette':
+                self._handle_close_palette(data, args)
+            elif action == 'auto_sort':
+                self._auto_sort_params(data, args)
+            elif action == 'save_fit_defaults':
+                self._handle_save_fit_defaults(data, args)
+            elif action == 'get_active_doc_info':
+                self._handle_get_doc_info(data, args)
+                
+        except Exception as e:
+            self._send_error(f"Event Handler Error: {e}")
+            log_diag(traceback.format_exc())
+
+    # --- HANDLERS ---
+
+    def _handle_get_initial_data(self, data, args):
+        try:
+            payload = self._gather_payload_dict()
+            args.returnData = json.dumps({'content': payload, 'type': 'init_all'})
+        except Exception as e:
+            log_diag(f"Init Data Error: {e}")
+            args.returnData = json.dumps({'content': {}, 'type': 'error', 'msg': str(e)})
+
+    def _handle_save_preset(self, data, args):
+        name = data.get('name')
+        params = data.get('params')
+        if self.preset_manager.save_preset(name, params):
+            self._send_notification(f"Saved '{name}'", "success")
+            self._handle_set_current_preset({'name': name}, None)
+        else:
+            self._send_notification("Save Failed", "error")
+
+    def _handle_delete_preset(self, data, args):
+        name = data.get('name')
+        if self.preset_manager.delete_preset(name):
+            self._send_notification(f"Deleted '{name}'", "success")
+            self._send_initial_data()
+        else:
+            self._send_notification("Delete Failed", "error")
+
+    def _handle_set_current_preset(self, data, args):
+        preset_name = data.get('name')
+        if not preset_name:
+             # Clear preset
+             self._set_preset_param(None)
+        else:
+             self._set_preset_param(preset_name)
+        self._send_initial_data()
+
+    def _set_preset_param(self, name):
+        try:
+            app = adsk.core.Application.get()
+            design = adsk.fusion.Design.cast(app.activeProduct)
+            if not design: return
+            p_name = '_zen_current_preset'
+            exist = design.userParameters.itemByName(p_name)
+            if name:
+                if exist: exist.comment = name
+                else: design.userParameters.add(p_name, adsk.core.ValueInput.createByString('1'), '', name)
+            else:
+                if exist: exist.deleteMe()
+            adsk.doEvents()
+        except: pass
+
+    def _handle_batch_update(self, data, args):
+        items = data.get('items', [])
+        suppress = data.get('suppress_refresh', False)
+        
+        count = 0
+        try:
+            app = adsk.core.Application.get()
+            design = adsk.fusion.Design.cast(app.activeProduct)
+            if not design: return
+            
+            for item in items:
+                try:
+                    name = item.get('name')
+                    expr = item.get('expression')
+                    comment = item.get('comment')
+                    is_user = item.get('isUser', True)
+                    
+                    if not name: continue
+                    
+                    # Try to find param
+                    param = design.userParameters.itemByName(name)
+                    if not param:
+                        # Maybe it is a model param?
+                        param = design.allParameters.itemByName(name)
+                        
+                    if param:
+                        if expr and param.expression != expr:
+                            param.expression = expr
+                            count += 1
+                        
+                        if comment is not None and param.comment != comment:
+                            param.comment = comment
+                            count += 1
+                    else:
+                        # New Parameter creation (if intended)
+                        # For batch update, we usually only update existing.
+                        # New params are created via separate logic or explicit create.
+                        # But if Logic.js sends new row as batch_update?
+                        # Logic.js sends 'new_param' as name for new rows, then user types name.
+                        # If user types name 'Width' and hits enter, it sends batch_update with name='Width'.
+                        # If 'Width' doesn't exist, we should create it?
+                        # ZenParams v11 seems to implies seamless creation.
+                        if is_user and expr:
+                             # Create new
+                             design.userParameters.add(name, adsk.core.ValueInput.createByString(expr), "mm", comment or "")
+                             count += 1
+                except:
+                    continue
+            
+            if count > 0:
+                adsk.doEvents()
+                
+        except Exception as e:
+            log_diag(f"Batch Update Error: {e}")
+        
+        if not suppress:
+            self._send_all_params()
+
+    def _handle_delete_param(self, data, args):
+        name = data.get('name')
+        try:
+            app = adsk.core.Application.get()
+            design = adsk.fusion.Design.cast(app.activeProduct)
+            p = design.userParameters.itemByName(name)
+            if p: 
+                p.deleteMe()
+                args.returnData = json.dumps({'status': 'success', 'msg': 'Deleted'})
+            else:
+                args.returnData = json.dumps({'status': 'error', 'msg': 'Not found'})
+        except Exception as e:
+            args.returnData = json.dumps({'status': 'error', 'msg': str(e)})
+
+    def _handle_close_palette(self, data, args):
+        app = adsk.core.Application.get()
+        ui = app.userInterface
+        p = ui.palettes.itemById(self.palette_id)
+        if p: p.isVisible = False
+
+    def _handle_refresh(self, data, args):
+        self._send_all_params()
+
+    def _handle_save_fit_defaults(self, data, args):
+        fits = data.get('fits')
+        if self.fit_manager.save_fits(fits):
+            self._send_notification("Fits saved", "success")
+            self._send_initial_data()
+
+    def _handle_get_doc_info(self, data, args):
+        doc_name = ""
+        doc_id = ""
+        try:
+            app = adsk.core.Application.get()
+            design = adsk.fusion.Design.cast(app.activeProduct)
+            if design and design.parentDocument:
+                doc_name = design.parentDocument.name
+                doc_id = design.parentDocument.creationId
+        except: pass
+        args.returnData = json.dumps({'name': doc_name, 'id': doc_id})
+
+
     def _send_initial_data(self):
         payload = self._gather_payload_dict()
         self._send_response(payload, 'init_all')
