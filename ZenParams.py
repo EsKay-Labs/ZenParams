@@ -77,14 +77,20 @@ class CommandStartingHandler(adsk.core.ApplicationCommandEventHandler):
 class CommandTerminatedHandler(adsk.core.ApplicationCommandEventHandler):
     def notify(self, args):
         global _palette_handler
+        
+        # DEBUG: Confirm Fusion is firing the event
+        lib.zen_utils.log_diag("TERM-EVT Received!")
+        
         try:
             lib.zen_utils.log_file("MainEvt: Fired") 
         except: pass
 
-        try:
-             if _palette_handler:
-                 _palette_handler.on_command_terminated(args)
-        except: pass
+        if _palette_handler:
+            try:
+                _palette_handler.on_command_terminated(args)
+            except: pass
+        else:
+            lib.zen_utils.log_diag("WARN: _palette_handler is None!")
 
 class CommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
     def notify(self, args):

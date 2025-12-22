@@ -24,18 +24,27 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
         Called when any Fusion command finishes.
         Handles Auto-Sort triggers efficiently.
         """
+        # Safe command extraction
+        cmd_id = "Unknown"
+        cmd_name = "Unknown"
         try:
-            cmd_def = args.command.parentCommandDefinition
-            cmd_id = cmd_def.id
-            cmd_name = cmd_def.name
-            
-            # Avoid infinite loop: Text Command writes trigger this event!
-            if 'TextCommandInput' in cmd_id: return
+            if args and args.command:
+                cmd_def = args.command.parentCommandDefinition
+                if cmd_def:
+                    cmd_id = cmd_def.id or "NoID"
+                    cmd_name = cmd_def.name or "NoName"
+        except Exception as e:
+            log_diag(f"CMD Extract Error: {e}")
+            return # Can't proceed without command info
+        
+        # Avoid infinite loop: Text Command writes trigger this event!
+        if 'TextCommandInput' in cmd_id: return
 
-            # Debug: See what commands are firing (SAFE)
-            log_file(f"Cmd Terminated: {cmd_name} [{cmd_id}]")
-            log_diag(f"CMD: {cmd_name} [{cmd_id}]") # Visual Confirmation
-            
+        # Debug: See what commands are firing (SAFE)
+        log_file(f"Cmd Terminated: {cmd_name} [{cmd_id}]")
+        log_diag(f"CMD: {cmd_name} [{cmd_id}]") # Visual Confirmation
+        
+        try:
             # TRG 1: GEOMETRY CREATION -> MAP REFRESH & SORT
             # If new bodies/features created, we must rebuild the map.
             geometry_cmds = ['Extrude', 'Revolve', 'Hole', 'Fillet', 'Chamfer', 'Sweep', 'Loft', 'Combine', 'Thicken', 'Pattern', 'Mirror']
@@ -53,8 +62,8 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                 self._auto_sort_params(force_map_refresh=True)
                 self._send_all_params()
 
-        except:
-            pass
+        except Exception as e:
+            log_diag(f"Trigger Error: {e}")
 
     # --- HELPERS ---
 
