@@ -6,9 +6,17 @@ class ZenDependencyCrawler:
     Analyzes parameter dependencies to find what geometry they drive.
     Used for Auto-Categorization.
     """
-    def __init__(self, app):
-        self.app = app
-        self.ui = app.userInterface
+    def __init__(self, design):
+        self.design = design
+
+    def get_param_body_name(self, param):
+        """
+        Helper to return the name of the first driven body found, or None.
+        """
+        bodies = self.get_driven_bodies(param)
+        if bodies:
+            return bodies[0]
+        return None
 
     def get_driven_bodies(self, param):
         """
