@@ -18,13 +18,18 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
 
     def notify(self, args):
         try:
-            log_diag(f"Raw Event: {args.data}")
+            # log_diag(f"Raw Event: {args.data}")
             if not args.data: return
             
             html_args = json.loads(args.data)
             action = html_args.get('action')
 
             if not action: return # Ignore heartbeats/empty events
+            
+            # Log only interesting events
+            if action != 'get_active_doc_info':
+                 log_diag(f"Action: {action}")
+                 
             data = html_args.get('data')
             
             # Dispatcher

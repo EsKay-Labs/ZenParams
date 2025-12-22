@@ -63,27 +63,31 @@ class ZenDependencyCrawler:
         """
         Scans the design to find which Features/Sketches own which Bodies.
         Populates self.entity_map.
+        Uses Timeline iteration because body.creationFeature is unreliable.
         """
         try:
-            root = self.design.rootComponent
-            all_comps = [root] 
-            # Add occurrences later if needed, focusing on Root for now for speed
+            timeline = self.design.timeline
+            # count = timeline.count
+            # log_diag(f"Scanning {count} timeline objects...")
             
-            for comp in all_comps:
-                for body in comp.bRepBodies:
-                    if not body.isValid: continue
-                    body_name = body.name
-                    
-                    # 1. Creating Feature (e.g. Extrude)
-                    feat = body.creationFeature
-                    if feat and feat.isValid:
-                        self._map_entity(feat, body_name)
-                        
-                        # 2. Source Sketches?
-                        # This is the "Deep" link.
-                        # Most features (Extrude, Revolve) have a 'profile' input.
-                        # We need to find the sketch associated with that profile.
-                        self._map_feature_to_sketch(feat, body_name)
+            for i in range(timeline.count):
+                obj = timeline.item(i)
+                # obj is a TimelineObject. entity returns the Feature (e.g. ExtrudeFeature)
+                feat = obj.entity
+                
+                if not feat or not feat.isValid: continue
+                
+                # We are looking for features that produce bodies
+                # e.g. Extrude, Revolve, Sweep, Loft, Thicken, etc.
+                if hasattr(feat, 'bodies') and feat.bodies.count > 0:
+                    for k in range(feat.bodies.count):
+                        body = feat.bodies.item(k)
+                        if body and body.isValid:
+                            body_name = body.name
+                            # Map Feature -> Body
+                            self._map_entity(feat, body_name)
+                            # Map Source Sketch -> Body
+                            self._map_feature_to_sketch(feat, body_name)
 
         except Exception as e:
             log_diag(f"Crawler Map Error: {e}")
