@@ -96,9 +96,27 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             for param in design.userParameters:
                 if param.name == '_zen_current_preset': continue
                 
-                # Check if already grouped
+                # Get current comment
                 comment = param.comment
-                if comment.startswith('['): continue # Already grouped
+                
+                # Detect corrupted list-format brackets like "[['body']]" or "['body', 'other']"
+                # These need to be stripped before re-categorizing
+                if comment.startswith("[['") or comment.startswith("['"):
+                    # Strip the corrupted format and extract original comment if any
+                    try:
+                        end_bracket = comment.rfind(']')
+                        if end_bracket != -1 and end_bracket < len(comment) - 1:
+                            comment = comment[end_bracket + 1:].strip()
+                        else:
+                            comment = ""  # Pure list with no trailing comment
+                        param.comment = comment  # Clean it
+                        log_diag(f"  Cleaned corrupted bracket: {param.name}")
+                    except:
+                        comment = ""
+                
+                # Skip if already properly grouped (clean bracket like "[BodyName]")
+                if comment.startswith('[') and ']' in comment:
+                    continue
                 
                 # Crawl - crawler returns None or list of body names
                 body_list = crawler.get_param_body_name(param)
