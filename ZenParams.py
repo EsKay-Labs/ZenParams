@@ -70,12 +70,14 @@ class DocumentActivatedHandler(adsk.core.DocumentEventHandler):
 class CommandTerminatedHandler(adsk.core.ApplicationCommandEventHandler):
     def notify(self, args):
         global _palette_handler
-        # Filter for relevant commands to avoid spamming
-        # e.g. 'RenameCommand', 'Extrusion', 'Fillet'
-        # For now, we pass everything to the handler to decide
+        # Debug: Confirm Add-In hears the event
+        # lib.zen_utils.log_diag(f"MainEvt: {args.command.parentCommandDefinition.name}")
+        
         try:
              if _palette_handler:
                  _palette_handler.on_command_terminated(args)
+             else:
+                 lib.zen_utils.log_diag("Error: Palette Handler is None!")
         except: pass
 
 class CommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
