@@ -133,7 +133,7 @@
       table {
         width: 100%;
         border-collapse: collapse;
-        table-layout: fixed; /* Critical for resizing */
+        table-layout: auto; /* Content-based sizing */
       }
       th {
         background: #2d2d2d;
@@ -150,15 +150,16 @@
       }
       .resizer {
         position: absolute;
-        right: -4px;
+        right: 0;
         top: 0;
         height: 100%;
-        width: 10px;
-        background: transparent;
+        width: 4px;
+        background: #3e3e42; /* Visible grip line */
         cursor: col-resize;
         user-select: none;
         touch-action: none;
         z-index: 100;
+        transition: background 0.15s;
       }
       th:last-child .resizer {
         display: none; /* No resize on last column */
@@ -465,11 +466,11 @@
         <table id="param-table">
           <thead>
             <tr>
-              <th width="50%">Name</th>
-              <th width="25%">Value</th>
-              <th width="10%">Unit</th>
-              <th width="10%">Comment</th>
-              <th width="5%"></th>
+              <th>Name</th>
+              <th>Value</th>
+              <th style="width: 50px">Unit</th>
+              <th>Comment</th>
+              <th style="width: 30px"></th>
             </tr>
           </thead>
           <tbody></tbody>
