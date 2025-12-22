@@ -100,19 +100,30 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                 comment = param.comment
                 if comment.startswith('['): continue # Already grouped
                 
-                # Crawl
-                body_name = crawler.get_param_body_name(param)
+                # Crawl - crawler returns None or list of body names
+                body_list = crawler.get_param_body_name(param)
                 
-                # Clean up "Unsaved" root name
-                if body_name == '(Unsaved)': body_name = 'Main Design'
+                # Determine category from body list
+                if body_list is None or len(body_list) == 0:
+                    # Unused - no references found
+                    category = None  # Skip for now, keep uncategorized
+                elif len(body_list) == 1:
+                    # Body-specific: used by exactly one body
+                    category = body_list[0]
+                    # Clean up root component name
+                    if category == '(Unsaved)': 
+                        category = 'Main Design'
+                else:
+                    # Shared: used by multiple bodies
+                    category = f"Shared ({len(body_list)})"
                 
-                if body_name:
-                    # Update Comment: "[BodyName] Original Comment"
-                    new_comment = f"[{body_name}] {comment}"
+                if category:
+                    # Update Comment: "[Category] Original Comment"
+                    new_comment = f"[{category}] {comment}"
                     param.comment = new_comment
                     count += 1
                     adsk.doEvents() # Prevent race condition
-                    log_diag(f"  Sorted {param.name} -> {body_name}")
+                    log_diag(f"  Sorted {param.name} -> {category}")
                 # else:
                 #     log_diag(f"  Unsorted: {param.name} (No usage found)")
             
