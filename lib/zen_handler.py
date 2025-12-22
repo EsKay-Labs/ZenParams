@@ -260,7 +260,7 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
 
     # --- HELPERS ---
 
-    def _auto_sort_params(self):
+    def _auto_sort_params(self, data=None, args=None):
         """
         Uses ZenDependencyCrawler to find bodies associated with parameters
         and updates their group tags if they are uncategorized.
