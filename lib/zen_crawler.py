@@ -132,6 +132,18 @@ class ZenDependencyCrawler:
                             self._map_entity(feat, body_name)
                             # Map Source Sketch -> Body
                             self._map_feature_to_sketch(feat, body_name)
+                
+                # Special Case: Sketch created ON a Body Face
+                # Even if not extruded yet, it belongs to that Body.
+                if isinstance(feat, adsk.fusion.Sketch):
+                    try:
+                        plane = feat.referencePlane
+                        if isinstance(plane, adsk.fusion.BRepFace):
+                            body = plane.body
+                            if body and body.isValid:
+                                self._map_entity(feat, body.name)
+                                log_diag(f"  Mapped Sketch-on-Face {feat.name} -> {body.name}")
+                    except: pass
             
             log_diag(f"Crawler Map Built: {len(self.entity_map)} entities mapped.")
 
