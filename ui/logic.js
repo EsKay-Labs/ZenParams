@@ -608,13 +608,18 @@ document.addEventListener("DOMContentLoaded", function () {
   // --- EVENT LISTENER (PUSH FROM PYTHON) ---
   window.response = function (dataStr) {
     console.log("[ZP] Received PUSH event");
+    console.log("[ZP] Raw Data:", dataStr ? dataStr.substring(0, 200) : "null"); // Debug
     try {
       var data = JSON.parse(dataStr);
       var type = data.type;
       var content = data.content;
 
       if (type === "update_table") {
-        console.log("[ZP] Event: update_table");
+        console.log(
+          "[ZP] Event: update_table -> fillTable with " +
+            (content ? content.length : "null") +
+            " items"
+        );
         fillTable(content);
       } else if (type === "notification") {
         // Handle Notification {message, status}
