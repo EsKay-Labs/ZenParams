@@ -353,9 +353,6 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                     
                     group, clean_cmt = parse_group(full_cmt)
                     
-                    if len(param_list) < 5:
-                        log_diag(f"DEBUG Param {name}: cmt='{full_cmt}' -> grp='{group}'")
-
                     param_list.append({
                         'name': name, 'expression': expr,
                         'unit': unit, 'comment': clean_cmt, 

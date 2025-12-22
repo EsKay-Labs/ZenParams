@@ -597,6 +597,41 @@ document.addEventListener("DOMContentLoaded", function () {
   // -------------------------------------------------------------------------
   // WATCHDOG LOOP (Smart Polling for Tab Changes)
   // -------------------------------------------------------------------------
+  // --- EVENT LISTENER (PUSH FROM PYTHON) ---
+  window.response = function (dataStr) {
+    console.log("[ZP] Received PUSH event");
+    try {
+      var data = JSON.parse(dataStr);
+      var type = data.type;
+      var content = data.content;
+
+      if (type === "update_table") {
+        console.log("[ZP] Event: update_table");
+        fillTable(content);
+      } else if (type === "notification") {
+        // Handle Notification {message, status}
+        var msg = data.message || content; // Backwards compat
+        var status = data.status || "info";
+        setStatus(msg, status);
+      } else if (type === "init_all") {
+        console.log("[ZP] Event: init_all (Push)");
+        fillPresets(content.presets || {});
+        fillTable(content.params || []);
+        updateCurrentPreset(content.current_preset);
+        if (content.fits) FIT_DEFAULTS = content.fits;
+
+        // Legacy Logic
+        var legacyNotice = document.getElementById("legacy-notice");
+        if (legacyNotice) {
+          legacyNotice.style.display =
+            content.legacy_params === true ? "block" : "none";
+        }
+      }
+    } catch (e) {
+      console.error("[ZP] Event Push Error:", e);
+    }
+  };
+
   var lastDocId = "";
 
   setInterval(function () {
