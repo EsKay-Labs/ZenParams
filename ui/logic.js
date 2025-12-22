@@ -174,17 +174,21 @@ function filterTable(query) {
   var tbody = document.querySelector("#param-table tbody");
   if (!tbody) return;
 
-  // Get all rows (both group headers and data rows)
+  // Get all rows
   var allRows = tbody.querySelectorAll("tr");
   var groupVisibility = {}; // Track if group has visible items
 
   allRows.forEach(function (row) {
-    if (row.classList.contains("group-header-row")) {
-      // Skip headers on first pass, we'll handle them after
+    // Check if this is a group header (has .group-header in its td)
+    var headerTd = row.querySelector(".group-header");
+    if (headerTd) {
+      // Skip headers on first pass
       return;
     }
 
-    // Data rows
+    // Data rows (have .group-row class)
+    if (!row.classList.contains("group-row")) return;
+
     var nameInput = row.querySelector(".name");
     var exprInput = row.querySelector(".expr");
     var commentInput = row.querySelector(".comment");
@@ -196,18 +200,26 @@ function filterTable(query) {
 
     var match =
       q === "" || name.includes(q) || expr.includes(q) || comment.includes(q);
-    row.style.display = match ? "" : "none";
 
-    // Track group visibility
+    // Don't hide with display:none, toggle the hidden-row class instead
     if (match) {
+      row.classList.remove("hidden-row");
       groupVisibility[group] = true;
+    } else {
+      row.classList.add("hidden-row");
     }
   });
 
   // Now toggle group headers based on visibility
   allRows.forEach(function (row) {
-    if (row.classList.contains("group-header-row")) {
-      var gName = row.dataset.group || "";
+    var headerTd = row.querySelector(".group-header");
+    if (headerTd) {
+      var gName = "";
+      // Extract group name from data-group of child rows
+      var nextRow = row.nextElementSibling;
+      if (nextRow && nextRow.dataset.group) {
+        gName = nextRow.dataset.group;
+      }
       var hasVisible = groupVisibility[gName] || false;
       row.style.display = q === "" || hasVisible ? "" : "none";
     }

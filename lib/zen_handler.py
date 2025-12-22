@@ -99,22 +99,29 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                 # Get current comment
                 comment = param.comment
                 
-                # Detect corrupted list-format brackets like "[['body']]" or "['body', 'other']"
-                # These need to be stripped before re-categorizing
-                if comment.startswith("[['") or comment.startswith("['"):
-                    # Strip the corrupted format and extract original comment if any
+                # Detect and clean various corrupted/outdated bracket formats:
+                # 1. List format: "[['body']]" or "['body', 'other']"
+                # 2. Old Shared format: "[Shared (2)]" "[Shared (4)]" etc.
+                needs_clean = False
+                
+                if comment.startswith("[['"): needs_clean = True
+                elif comment.startswith("['"): needs_clean = True
+                elif comment.startswith("[Shared ("): needs_clean = True  # Old shared format
+                
+                if needs_clean:
                     try:
-                        end_bracket = comment.rfind(']')
+                        end_bracket = comment.find(']')
                         if end_bracket != -1 and end_bracket < len(comment) - 1:
                             comment = comment[end_bracket + 1:].strip()
                         else:
-                            comment = ""  # Pure list with no trailing comment
-                        param.comment = comment  # Clean it
-                        log_diag(f"  Cleaned corrupted bracket: {param.name}")
+                            comment = ""
+                        param.comment = comment
+                        log_diag(f"  Cleaned old bracket: {param.name}")
                     except:
                         comment = ""
                 
-                # Skip if already properly grouped (clean bracket like "[BodyName]")
+                # Skip if already properly grouped with CURRENT format
+                # (clean single bracket like "[BodyName]" or "[Shared]" or "[Unused]")
                 if comment.startswith('[') and ']' in comment:
                     continue
                 
