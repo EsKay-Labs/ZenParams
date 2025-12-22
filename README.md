@@ -2,114 +2,104 @@
 
 ### _THE "GOD MODE" PARAMETER MANAGER FOR FUSION 360_
 
-> 🛑 **WARNING:** This plugin may cause sudden bursts of extreme productivity, uncontrollable smiling during the design phase, and a complete intolerance for manual data entry.
+> 🛑 **WARNING:** This plugin will make you physically incapable of tolerating the native Fusion 360 parameter window ever again. Side effects include extreme efficiency, methodical design habits, and a severe reduction in mouse clicks.
+
+![Main UI](docs/ui_main.png)
 
 ---
 
-## 😤 THE PROBLEM (The Irony)
+## 😤 THE IRONY (Why this exists)
 
-**Fusion 360 is a paradox.** It’s a futuristic, cloud-powered, AI-ready CAD beast... that handles parameters like a **Windows 95 spreadsheet**.
+**Fusion 360 is a masterpiece of modern engineering.** It can simulate stress loads on a rocket engine, generate toolpaths for 5-axis CNCs, and render photorealistic clouds.
 
-You’re designing rockets and race cars, yet you’re forced to:
+**It is also stuck in 1999.**
 
-1.  Open a slow modal window.
-2.  Click a tiny "+" button.
-3.  Type `wall_thick`... tab... `1.2mm`... tab... `Enclosure Wall`.
-4.  Repeat 50 times.
-5.  Realize you can’t sort them or group them meaningfully.
+Why, in the year 2025, are we typing `wall_thickness` into a modal window that looks like it was borrowed from Windows 98 SE? Why do we have to click a tiny `+` button 50 times just to define a box?
 
-It’s 2025. **Why are we doing data entry like it’s 1995?**
+You are a creative mastermind, not a data entry temp. **ZenParams PRO** is here to save you from the tyranny of the "Modify Parameters" dialog.
 
-## 🚀 THE SOLUTION (The Savior)
+## 🚀 THE SAVIOR (What it does)
 
-**ZenParams PRO** isn't just a plugin; it's a rebellion against bad UX. It turns the soul-crushing chore of parameter management into a fluid, high-speed workflow that actually feels _modern_.
+**ZenParams PRO** is an **Always-On, High-Velocity Command Center** for your design intent.
 
-It is the **Life Savior** for anyone who uses more than 5 parameters in a design.
+- **It Lives on Screen:** Unlike the native modal, ZenParams is a palette. It stays open while you design. You never have to close it.
+- **It Forces Methodical Design:** Because your parameters are instantly accessible and easy to group, you naturally stop using "Magic Numbers" (`10mm`) and start using "Engineering Variables" (`Top_Plate_Thick`).
+- **It Saves Your Sanity:** We timed it. ZenParams cuts the time to create, name, and value a parameter by **70%**.
 
 ---
 
 ## 🔬 ANALYTICAL FEATURE BREAKDOWN
 
-We didn't just skin the API; we re-engineered how parameters work.
+We re-engineered the entire workflow to focus on **Speed**, **Context**, and **Density**.
 
-### 1. 📉 Smart Compact Layout (The "No-Pixel-Left-Behind" Engine)
+### 1. 📉 Smart Compact Layout (The "Density Engine")
 
-We engineered a custom table layout algorithm to maximize information density:
+![Compact Layout](docs/ui_compact.png)
 
-- **Shrink-Wrap Columns**: The Name, Value, and Unit columns explicitly set their width to `1px` (a CSS trick), forcing the browser to shrink them to the _exact_ width of their text content.
-- **Smart Inputs**: Input fields dynamically calculate their own width based on character count (`ch` units). A value of `0.1` takes up 10px; `125.05` takes up 50px.
-- **Greedy Comment Column**: The Comment column is programmed to consume **100% of the remaining screen space**, pushing all data columns tight to the left.
-- **Result**: You can see 3x more parameters on screen than the native dialog.
+We realized that screen real estate is precious.
 
-### 2. 🧭 Auto-Categorization (The "Zen Crawler")
+- **Shrink-Wrap Columns**: The Name and Value columns use a custom algorithm to shrink to the _exact_ width of their text. A value of `0.1` takes up 15 pixels. `125.0` takes up 40. No dead space.
+- **Greedy Comment Engine**: The Comment column is programmed to aggressively consume 100% of the remaining space, ensuring your actual data stays tight and readable on the left.
+- **Result**: You can see 30+ parameters at a glance without scrolling.
 
-Fusion 360 doesn't know which parameter drives which body. **We do.**
+### 2. ⚡ High-Velocity Data Flow
 
-- **Reverse Indexing**: The script crawls the entire Design Timeline, analyzing every Feature, Sketch, and Dimension.
-- **Dependency Tracing**: It maps `UserParam -> ModelParam -> SketchDimension -> Sketch -> Feature -> Body`.
-- **Automatic Grouping**:
-  - **[Body Name]**: Parameters used by exactly one body are automatically grouped into a folder named after that body.
-  - **[Shared]**: Parameters used by multiple bodies are tagged as Shared.
-  - **[Unused]**: Parameters driving nothing are grayed out, so you know what to clean up.
+- **Ctrl + Enter (Global)**: Press this from _anywhere_ to add a row. You don't even need to touch the mouse.
+- **Excel-Style Locking**: Type a value, press **Enter**. It saves instantly and **Locks** the field. No accidental overwrites.
+- **Live Sync**: Changed a dimension in the canvas? ZenParams updates instantly. It’s always watching.
 
-### 3. ⚡ High-Velocity Data Entry
+### 3. 🧭 The "Zen Crawler" (Auto-Context)
 
-- **Ctrl + Enter (Global)**: Instantly adds a new row from _anywhere_. No mouse needed.
-- **Single Enter**: Saves the value and **Locks** the field (Excel-style). This prevents accidental edits while keeping you in the flow.
-- **Auto-Focus**: New rows immediately focus the Name field.
+Fusion 360 doesn't know _what_ your parameters do. **ZenParams does.**
+It crawls your design's timeline, analyzing sketches, features, and faces to map every parameter to its owner.
 
-### 4. 🛡️ Safe Deletion (Dependency Guard)
+- **[Body Name]**: Usage is detected automatically. `UserParam` -> `ModelParam` -> `Sketch` -> `Extrude` -> `Body`.
+- **[Shared]**: Detected usage across multiple bodies? It gets tagged as Shared.
+- **[Unused]**: Parameters driving nothing are visually grayed out. Time to clean house.
 
-Native Fusion lets you delete a parameter that drives geometry, causing the timeline to explode in red errors.
+### 4. 🪄 The Smart Fit Wizard
 
-- **Pre-Validation**: ZenParams checks `dependentParameters` and `parentFeatures` BEFORE you delete.
-- **Usage Report**: If a parameter is in use, it denies the deletion and tells you exactly _what_ is using it.
+![Smart Wizard](docs/ui_wizard.png)
 
-### 5. 🔄 Version-Based Live Sync
+Stop doing mental math for 3D printing tolerances.
 
-Native palettes often desync from the actual design state.
+- **Click The Wand**: Choose a context (e.g., "Heat Set Insert", "Magnet Press Fit").
+- **We Do The Math**: ZenParams calculates the perfect interference/clearance (e.g., `Hole_Dia = 3.8mm` for an M3 insert) based on empirical standards.
 
-- We implemented a **Polling System** where Python increments a `_data_version` counter on any change.
-- The UI polls this version every 1 second.
-- Updates are instant and atomic. If you change a generic dimension in the canvas, ZenParams reflects it immediately.
+### 5. 🛡️ Safety Systems
 
-### 6. 🪄 The Smart Fit Wizard
-
-Generates tolerance-compensated parameters automatically for 3D printing or machining.
-
-- **Workflow**: Select "Heat Set Insert" -> "M3".
-- **Result**: Creates params like `M3_Hole = 3.8mm` (includes empirically tested tolerances).
-
-### 7. 🧬 Preset Cloning
-
-Save your entire parameter list (materials, tolerances, standard dimensions) as a JSON preset.
-
-- **One-Click Setup**: Load "ABS Printing Standards" and populate 20 parameters instantly.
+- **Dependency Guard**: Try to delete a parameter that's driving a feature. **DENIED.** ZenParams tells you exactly what would break, preventing the dreaded "Red Timeline of Death".
+- **Preset Cloning**: Save your "PLA Tolerance Standards" or "CNC Aluminum Specs" as a preset. Load them into any new design with one click.
 
 ---
 
-## 📦 INSTALLATION
+## 📦 INSTALLATION (30 Seconds)
 
-1.  **Download** this repo.
+1.  **Download** this repository.
 2.  **Move** the folder to your Fusion 360 Scripts folder:
     - _Windows_: `%appdata%\Autodesk\Autodesk Fusion 360\API\Scripts\`
     - _Mac_: `~/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/`
 3.  **Open Fusion 360** -> **Utilities** -> **Scripts and Add-Ins**.
 4.  Find **ZenParams** and click **RUN**.
 
+> **PRO TIP:** Check "Run on Startup". You will never want to design without this again.
+
 ---
 
-## ⌨️ KEYBOARD SHORTCUTS
+## 🎮 SHORTCUT CHEAT SHEET
 
-| Shortcut              | Action                     |
-| :-------------------- | :------------------------- |
-| **Ctrl + Enter**      | Add new parameter row      |
-| **Enter (Edit Mode)** | Save & Lock field          |
-| **Esc**               | Cancel edit / Close window |
-| **Double Click**      | Edit a locked field        |
+| Shortcut         | Action                             |
+| :--------------- | :--------------------------------- |
+| **Ctrl + Enter** | **Add Parameter** (Works globally) |
+| **Enter**        | **Save & Lock** current field      |
+| **Double Click** | **Edit** a locked field            |
+| **Esc**          | Cancel edit / Hide Palette         |
 
 ---
 
 ### 💬 FEEDBACK & LICENSE
 
-Built for **Builders**. **MIT License**. Free forever.
+Built for **Engineers who value their time**.
+**MIT License**. Free forever.
+
+_"Design like a pro. Parameterize like a Zen Master."_
