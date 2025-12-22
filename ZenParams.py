@@ -4,10 +4,20 @@ import traceback
 import os
 import sys
 
+import importlib
+
 # Ensure local lib directory is in path
 APP_PATH = os.path.dirname(os.path.abspath(__file__))
 if APP_PATH not in sys.path:
     sys.path.insert(0, APP_PATH)
+
+# Force Reload to fix Fusion 360 caching issues
+import lib.zen_utils
+import lib.zen_crawler
+import lib.zen_handler
+importlib.reload(lib.zen_utils)
+importlib.reload(lib.zen_crawler)
+importlib.reload(lib.zen_handler)
 
 from lib.zen_handler import ZenPaletteEventHandler
 

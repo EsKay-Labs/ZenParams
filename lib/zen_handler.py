@@ -17,6 +17,9 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
 
     def notify(self, args):
         try:
+            # log_diag(f"Raw Event: {args.data}")
+            if not args.data: return
+            
             html_args = json.loads(args.data)
             action = html_args.get('action')
             data = html_args.get('data')
