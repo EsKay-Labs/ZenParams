@@ -104,6 +104,10 @@ class ZenDependencyCrawler:
                 
                 if not feat or not feat.isValid: continue
                 
+                # Debug: Audit Feature Types
+                feat_type = feat.objectType.split('::')[-1]
+                log_diag(f"Timeline Item {i}: {feat_type}")
+                
                 # We are looking for features that produce bodies
                 # e.g. Extrude, Revolve, Sweep, Loft, Thicken, etc.
                 if hasattr(feat, 'bodies') and feat.bodies.count > 0:
