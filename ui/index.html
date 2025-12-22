@@ -161,8 +161,9 @@
         z-index: 100;
         transition: background 0.15s;
       }
-      th:last-child .resizer {
-        display: none; /* No resize on last column */
+      th:last-child .resizer,
+      th:nth-child(4) .resizer {
+        display: none; /* No resize on last columns */
       }
       .resizer:hover,
       .resizer.resizing {
@@ -180,12 +181,13 @@
       } /* Delete button */
 
       .tbl-input {
-        width: 100%;
+        width: auto;
+        min-width: 30px;
         box-sizing: border-box;
         background: transparent;
         border: 1px solid transparent;
         color: #cccccc;
-        padding: 4px;
+        padding: 2px 4px;
         border-radius: 2px;
       }
       .tbl-input:focus {
