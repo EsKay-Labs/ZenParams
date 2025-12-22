@@ -332,9 +332,8 @@ function attachEnterHandlers(context) {
         } else {
           lastEnterTime = now;
           lastEnterRow = tr;
-          // Exit edit mode - lock and deselect
+          // Exit edit mode - lock but keep focus for double-Enter
           inp.readOnly = true;
-          inp.blur();
           setStatus("Saved. Press Enter again to add new.", "info");
         }
       }
