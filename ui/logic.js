@@ -435,61 +435,97 @@ document.addEventListener("DOMContentLoaded", function () {
   var fitCreateBtn = document.getElementById("fit-create");
   var fitCancelBtn = document.getElementById("fit-cancel");
 
+  // Inputs
+  var ctxInput = document.getElementById("fit-context");
+  var sizeInput = document.getElementById("fit-size");
+  var tolInput = document.getElementById("fit-tol");
+  var previewEl = document.getElementById("fit-preview");
+
+  // Defaults Map
+  var FIT_DEFAULTS = {
+    bolt: 0.2,
+    magnet: 0.15,
+    bearing: 0.1,
+    insert: -0.1, // Negative for undersize
+    lid: 0.15,
+    slider: 0.25,
+  };
+
+  function updatePreview() {
+    if (!sizeInput || !tolInput) return;
+    var s = parseFloat(sizeInput.value) || 0;
+    var t = parseFloat(tolInput.value) || 0;
+    var res = (s + t).toFixed(3);
+    if (previewEl) previewEl.textContent = res + "mm";
+  }
+
   if (fitBtn && fitModal) {
     fitBtn.onclick = function () {
       fitModal.style.display = "block";
-      document.getElementById("fit-size").focus();
+      sizeInput.focus();
     };
 
     fitCancelBtn.onclick = function () {
       fitModal.style.display = "none";
     };
 
+    // Auto-update Tolerance when Context changes
+    if (ctxInput) {
+      ctxInput.onchange = function () {
+        var val = ctxInput.value;
+        if (FIT_DEFAULTS.hasOwnProperty(val)) {
+          tolInput.value = FIT_DEFAULTS[val];
+          updatePreview();
+        }
+      };
+    }
+
+    // Live Preview
+    if (sizeInput) sizeInput.oninput = updatePreview;
+    if (tolInput) tolInput.oninput = updatePreview;
+
     fitCreateBtn.onclick = function () {
-      var ctx = document.getElementById("fit-context").value;
-      var size = parseFloat(document.getElementById("fit-size").value) || 0;
+      var ctx = ctxInput.value;
+      var size = parseFloat(sizeInput.value) || 0;
+      var tol = parseFloat(tolInput.value) || 0;
+      var sign = tol >= 0 ? "+" : "-";
+      var absTol = Math.abs(tol);
 
       // GENERATE LOGIC
       var name = "";
-      var expr = "";
+      var expr = size + "mm " + sign + " " + absTol + "mm";
       var comment = "[SmartFit] ";
 
       if (ctx === "bolt") {
         name = "Hole_M" + size;
-        expr = size + "mm + 0.2mm"; // Standard Clearance
         comment += "M" + size + " Clearance";
       } else if (ctx === "magnet") {
         name = "Mag_" + size + "mm";
-        expr = size + "mm + 0.15mm"; // Press fit (PLA)
         comment += "Magnet Press";
       } else if (ctx === "bearing") {
         name = "Brg_" + size + "mm";
-        expr = size + "mm + 0.1mm"; // Tight Press
         comment += "Bearing Press";
       } else if (ctx === "insert") {
-        name = "Ins_M" + Math.floor(size); // Usually 3, 4, 5
-        expr = size + "mm - 0.1mm"; // Undersize for Heat Set
+        name = "Ins_M" + Math.floor(size);
         comment += "Heat Set Insert";
       } else if (ctx === "lid") {
         name = "Lid_Gap";
-        expr = "0.15mm";
+        expr = absTol + "mm"; // Lids are usually just the gap value
         comment += "Friction Fit Lid";
       } else {
         name = "Fit_Gen";
-        expr = size + "mm + 0.2mm";
         comment += "General Clearance";
       }
 
       // Insert
       var tbody = document.querySelector("#param-table tbody");
-      // Remove empty message if present
       var emptyMsg = tbody.querySelector("td[colspan]");
       if (emptyMsg) emptyMsg.closest("tr").remove();
 
       var tr = document.createElement("tr");
       tr.dataset.user = "true";
       tr.className = "group-row";
-      tr.dataset.group = "SmartFit"; // Auto-group
+      tr.dataset.group = "SmartFit";
 
       tr.innerHTML =
         '<td><input type="text" class="tbl-input name" value="' +
@@ -504,8 +540,7 @@ document.addEventListener("DOMContentLoaded", function () {
         '"></td>' +
         '<td><button class="row-delete" title="Delete">×</button></td>';
 
-      // Insert at top or under "SmartFit" group if exists...
-      // Simple: Insert at top for now, refresh will sort it.
+      // Insert at top
       tbody.insertBefore(tr, tbody.firstChild);
 
       attachDeleteHandlers(tr);
