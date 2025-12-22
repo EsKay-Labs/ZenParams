@@ -29,6 +29,9 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             cmd_id = cmd_def.id
             cmd_name = cmd_def.name
             
+            # Avoid infinite loop: Text Command writes trigger this event!
+            if 'TextCommandInput' in cmd_id: return
+
             # Debug: See what commands are firing
             log_diag(f"Cmd Terminated: {cmd_name} [{cmd_id}]")
             

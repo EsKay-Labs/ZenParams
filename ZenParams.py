@@ -70,26 +70,10 @@ class DocumentActivatedHandler(adsk.core.DocumentEventHandler):
 class CommandTerminatedHandler(adsk.core.ApplicationCommandEventHandler):
     def notify(self, args):
         global _palette_handler
-        # Debug: Confirm Add-In hears the event (Top Level)
-        try:
-            lib.zen_utils.log_diag("MainEvt: Fired") 
-            cmd_name = "Unknown"
-            if args and args.command:
-                if args.command.parentCommandDefinition:
-                    cmd_name = args.command.parentCommandDefinition.name
-                else:
-                    cmd_name = "NoParentDef"
-            lib.zen_utils.log_diag(f"MainEvt: {cmd_name}")
-        except:
-            lib.zen_utils.log_diag("MainEvt: Logging Error")
-
         try:
              if _palette_handler:
                  _palette_handler.on_command_terminated(args)
-             else:
-                 lib.zen_utils.log_diag("Error: Palette Handler is None!")
-        except Exception as e:
-            lib.zen_utils.log_diag(f"MainEvt: Handler Error {e}")
+        except: pass
 
 # ... (inside run) ...
 
