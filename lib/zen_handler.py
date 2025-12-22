@@ -122,9 +122,11 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                 body_list = crawler.get_param_body_name(param)
                 
                 # Determine category from body list
+                extra_info = ""  # Additional info to add to comment
+                
                 if body_list is None or len(body_list) == 0:
                     # Unused - no references found
-                    category = None  # Skip for now, keep uncategorized
+                    category = "Unused"
                 elif len(body_list) == 1:
                     # Body-specific: used by exactly one body
                     category = body_list[0]
@@ -132,12 +134,17 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                     if category == '(Unsaved)': 
                         category = 'Main Design'
                 else:
-                    # Shared: used by multiple bodies
-                    category = f"Shared ({len(body_list)})"
+                    # Shared: used by multiple bodies - single folder
+                    category = "Shared"
+                    # Add body names to comment so user knows which bodies
+                    body_names = ', '.join(body_list[:6])  # Limit to 6 names
+                    if len(body_list) > 6:
+                        body_names += f', +{len(body_list) - 6} more'
+                    extra_info = f" (Used by: {body_names})"
                 
                 if category:
-                    # Update Comment: "[Category] Original Comment"
-                    new_comment = f"[{category}] {comment}"
+                    # Update Comment: "[Category] Original Comment (Used by: ...)"
+                    new_comment = f"[{category}] {comment}{extra_info}"
                     param.comment = new_comment
                     count += 1
                     adsk.doEvents() # Prevent race condition
