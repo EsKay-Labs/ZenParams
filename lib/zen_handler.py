@@ -290,9 +290,15 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             
             if count > 0:
                 self._send_notification(f"Auto-sorted {count} params", "success")
+            else:
+                self._send_notification("No new associations found.", "info")
                 
         except Exception as e:
             log_diag(f"Auto-Sort Error: {str(e)}")
+            self._send_notification(f"Sort Error: {str(e)}", "error")
+            
+        # ALWAYS Refresh Table so UI doesn't hang
+        self._send_all_params()
 
     def _send_initial_data(self):
         payload = self._gather_payload_dict()

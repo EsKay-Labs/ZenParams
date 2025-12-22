@@ -1,5 +1,6 @@
 import adsk.core, adsk.fusion
 import traceback
+from .zen_utils import log_diag
 
 class ZenDependencyCrawler:
     """
@@ -39,11 +40,13 @@ class ZenDependencyCrawler:
                 
                 # CASE A: Parameter drives a Feature (Extrude, Revolve, etc.)
                 if isinstance(entity, adsk.fusion.Feature):
+                    # log_diag(f"  -> Drives Feature: {entity.name}")
                     # Check if feature has bodies
                     if hasattr(entity, 'bodies') and entity.bodies.count > 0:
                         for j in range(entity.bodies.count):
                             body = entity.bodies.item(j)
                             if body.isValid and body.name:
+                                # log_diag(f"    -> Affects Body: {body.name}")
                                 driven_bodies.add(body.name)
                 
                 # CASE B: Parameter drives a Sketch Dimension?
