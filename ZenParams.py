@@ -146,7 +146,16 @@ def run(context):
         show_palette()
         
         lib.zen_utils.log_diag("ZenParams v11 STARTUP: Handlers Registered")
-        lib.zen_utils.log_file(f"ZenParams Startup. Handlers: {len(_handlers)}")
+        
+        # DEBUG: Verify Log Path
+        log_path_debug = os.path.join(lib.zen_utils.APP_PATH, 'zen_debug.log')
+        lib.zen_utils.log_diag(f"Log Path: {log_path_debug}")
+        
+        try:
+            lib.zen_utils.log_file(f"ZenParams Startup. Handlers: {len(_handlers)}")
+            lib.zen_utils.log_diag("Log File Write: SUCCESS")
+        except Exception as e:
+            lib.zen_utils.log_diag(f"Log File Write: FAILED ({e})")
         
         # Startup Handler
         if not _app.isStartupComplete:
