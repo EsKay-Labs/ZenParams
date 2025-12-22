@@ -307,7 +307,8 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                 return
             
             # PRE-CHECK: Gather dependencies before attempting delete
-            deps = param.dependentDependencies
+            # API: dependentParameters returns parameters that reference this one
+            deps = param.dependentParameters
             dep_names = []
             if deps:
                 for i in range(deps.count):
