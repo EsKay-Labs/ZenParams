@@ -349,6 +349,11 @@ function requestData() {
                 fillTable(parsed.content.params || []);
                 updateCurrentPreset(parsed.content.current_preset);
 
+                // Update Fits
+                if (parsed.content.fits) {
+                  FIT_DEFAULTS = parsed.content.fits;
+                }
+
                 // SYNC DROPDOWN
                 if (
                   parsed.content.current_preset &&
@@ -443,6 +448,7 @@ document.addEventListener("DOMContentLoaded", function () {
   var fitModal = document.getElementById("fit-modal");
   var fitCreateBtn = document.getElementById("fit-create");
   var fitCancelBtn = document.getElementById("fit-cancel");
+  var fitSaveDefBtn = document.getElementById("fit-save-def");
 
   // Inputs
   var ctxInput = document.getElementById("fit-context");
@@ -450,12 +456,12 @@ document.addEventListener("DOMContentLoaded", function () {
   var tolInput = document.getElementById("fit-tol");
   var previewEl = document.getElementById("fit-preview");
 
-  // Defaults Map
+  // Defaults Map (Will be overwritten by backend)
   var FIT_DEFAULTS = {
     bolt: 0.2,
     magnet: 0.15,
     bearing: 0.1,
-    insert: -0.1, // Negative for undersize
+    insert: -0.1,
     lid: 0.15,
     slider: 0.25,
   };
@@ -471,6 +477,12 @@ document.addEventListener("DOMContentLoaded", function () {
   if (fitBtn && fitModal) {
     fitBtn.onclick = function () {
       fitModal.style.display = "block";
+      // Load default for current selection
+      var val = ctxInput.value;
+      if (FIT_DEFAULTS.hasOwnProperty(val)) {
+        tolInput.value = FIT_DEFAULTS[val];
+        updatePreview();
+      }
       sizeInput.focus();
     };
 
@@ -492,6 +504,21 @@ document.addEventListener("DOMContentLoaded", function () {
     // Live Preview
     if (sizeInput) sizeInput.oninput = updatePreview;
     if (tolInput) tolInput.oninput = updatePreview;
+
+    // Save Defaults
+    if (fitSaveDefBtn) {
+      fitSaveDefBtn.onclick = function () {
+        var ctx = ctxInput.value;
+        var tol = parseFloat(tolInput.value) || 0;
+
+        // Update Local
+        FIT_DEFAULTS[ctx] = tol;
+
+        // Send to Backend
+        sendToFusion("save_fit_defaults", { fits: FIT_DEFAULTS });
+        setStatus("Saving default for " + ctx + "...", "info");
+      };
+    }
 
     fitCreateBtn.onclick = function () {
       var ctx = ctxInput.value;

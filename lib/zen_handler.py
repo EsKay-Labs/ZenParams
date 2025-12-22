@@ -4,7 +4,7 @@ import json
 import traceback
 import time
 import re
-from .zen_utils import log_diag, PresetManager
+from .zen_utils import log_diag, PresetManager, FitManager
 from .zen_crawler import ZenDependencyCrawler
 
 class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
@@ -14,6 +14,7 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
         super().__init__()
         self.palette_id = palette_id
         self.preset_manager = PresetManager(root_path)
+        self.fit_manager = FitManager(root_path)
 
     def notify(self, args):
         try:
@@ -22,6 +23,8 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             
             html_args = json.loads(args.data)
             action = html_args.get('action')
+
+            if not action: return # Ignore heartbeats/empty events
             data = html_args.get('data')
             
             # Dispatcher
@@ -35,7 +38,8 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                 'delete_param': self._handle_delete_param,
                 'close_palette': self._handle_close_palette,
                 'refresh': self._handle_refresh,
-                'auto_sort': self._auto_sort_params
+                'auto_sort': self._auto_sort_params,
+                'save_fit_defaults': self._handle_save_fit_defaults
             }
             
             handler = dispatch_map.get(action)
@@ -49,8 +53,20 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             log_diag(traceback.format_exc())
 
     # --- HANDLERS ---
+    
+    def _handle_save_fit_defaults(self, data, args):
+        fits = data.get('fits')
+        if not fits: return
+        
+        if self.fit_manager.save_fits(fits):
+            self._send_notification("Fit Defaults Saved!", "success")
+            # Resend all data to update UI state if needed
+            self._send_initial_data()
+        else:
+            self._send_notification("Failed to save fits", "error")
 
     def _handle_get_doc_info(self, data, args):
+        # ... (Existing Code)
         doc_id = ""
         doc_name = ""
         try:
@@ -265,13 +281,18 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
         Uses ZenDependencyCrawler to find bodies associated with parameters
         and updates their group tags if they are uncategorized.
         """
+        log_diag("--> Executing Auto-Sort...")
         try:
             app = adsk.core.Application.get()
             design = adsk.fusion.Design.cast(app.activeProduct)
-            if not design: return
+            if not design: 
+                log_diag("No active design")
+                return
 
             crawler = ZenDependencyCrawler(design)
             count = 0
+            
+            # log_diag(f"Scanning {design.userParameters.count} parameters...")
             
             for param in design.userParameters:
                 if param.name == '_zen_current_preset': continue
@@ -287,7 +308,10 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                     new_comment = f"[{body_name}] {comment}"
                     param.comment = new_comment
                     count += 1
+                    log_diag(f"  Sorted {param.name} -> {body_name}")
             
+            log_diag(f"Auto-Sort Complete. Updated: {count}")
+
             if count > 0:
                 self._send_notification(f"Auto-sorted {count} params", "success")
             else:
@@ -377,6 +401,7 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
     def _gather_payload_dict(self):
         presets = self.preset_manager.load_all()
         params = self._get_param_list()
+        fits = self.fit_manager.load_fits() # Load fits!
         current_preset = None
         has_legacy = False
         
@@ -396,6 +421,7 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
         return {
             'presets': presets,
             'params': params,
+            'fits': fits,
             'current_preset': current_preset,
             'legacy_params': has_legacy
         }
