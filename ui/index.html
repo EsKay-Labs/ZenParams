@@ -178,13 +178,13 @@
       td:nth-child(1),
       td:nth-child(2),
       td:nth-child(3) {
-        width: 1%;
+        width: 1px; /* Force table cell to only be as wide as content */
         white-space: nowrap;
       }
       /* Comment takes remaining space */
       td:nth-child(4) {
         width: auto;
-        max-width: 0; /* Crucial for overflow:hidden to work in flex-like tables */
+        max-width: 0; /* Crucial for overflow:hidden */
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -196,8 +196,8 @@
       } /* Delete button */
 
       .tbl-input {
-        width: auto;
-        min-width: 30px;
+        width: 100%; /* Fill the tight cell */
+        min-width: 10px;
         box-sizing: border-box;
         background: transparent;
         border: 1px solid transparent;
