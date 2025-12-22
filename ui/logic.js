@@ -888,10 +888,11 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!confirm("Delete preset: " + selected + "?")) return;
 
       sendToFusion("delete_preset", { name: selected });
-      fillTable([]);
+      // Note: Preset deletion only removes the template file
+      // It does NOT affect actual Fusion 360 parameters
       updateCurrentPreset(null);
-      setStatus("Deleted: " + selected, "success");
-      setTimeout(requestData, 500);
+      setStatus("Deleted preset: " + selected, "success");
+      setTimeout(requestData, 500); // Refresh to show updated preset list
     };
   }
 

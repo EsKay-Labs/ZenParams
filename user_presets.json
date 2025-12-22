@@ -1,14 +1,19 @@
 {
     "Tzaki_valve": {
-        "WallThick": "1.2 mm",
-        "Tol_Hole": "0.20 mm",
-        "Tol_Thread": "0.20 mm",
-        "Tol_Loose": "0.40 mm",
-        "Tol_Slide": "0.25 mm",
+        "Tol_Press": "0.10 mm",
         "Tol_Snug": "0.15 mm",
-        "Tol_Press": "0.10 mm"
-    },
-    "my_preset": {
-        "Lid_Gap": "0.15 mm"
+        "Tol_Loose": "0.40 mm",
+        "Tol_Thread": "0.20 mm",
+        "Tol_Hole": "0.20 mm",
+        "WallThick": "1.2 mm",
+        "tamper_offset": "2 mm",
+        "Tol_Slide": "0.25 mm",
+        "pvc_od": "126.2 mm",
+        "pvc_wall_thickness": "4 mm",
+        "pvc_ring_extrude": "15 mm",
+        "Tamper_thickness": "2 mm",
+        "flap_rod_od": "2 mm",
+        "flap_rod_id": "6.3 mm",
+        "flap_od": "5 mm"
     }
 }

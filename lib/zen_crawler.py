@@ -21,8 +21,11 @@ class ZenDependencyCrawler:
 
     def get_param_body_name(self, param):
         """
-        Determines the owner body for a parameter by scanning for usage.
-        Returns: "BodyName", "Shared", or None.
+        Determines the owner body(ies) for a parameter by scanning for usage.
+        Returns: 
+            - None if no usage found (Unused)
+            - ["BodyName"] if used by exactly one body
+            - ["Body1", "Body2", ...] if used by multiple bodies (Shared)
         """
         if not param.isValid: return None
         
@@ -95,10 +98,10 @@ class ZenDependencyCrawler:
         except Exception as e:
             log_diag(f"Param Trace Error: {e}")
         
-        # 2. Analyze Results
-        if len(driven_bodies) == 0: return None
-        if len(driven_bodies) == 1: return list(driven_bodies)[0]
-        return "Shared" # Conflict
+        # Return as list for caller to analyze
+        if len(driven_bodies) == 0: 
+            return None  # Unused
+        return list(driven_bodies)  # List of 1+ body names
 
     def _build_reverse_map(self):
         """
