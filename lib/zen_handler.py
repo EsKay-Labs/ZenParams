@@ -33,7 +33,7 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             if 'TextCommandInput' in cmd_id: return
 
             # Debug: See what commands are firing
-            log_diag(f"Cmd Terminated: {cmd_name} [{cmd_id}]")
+            # log_diag(f"Cmd Terminated: {cmd_name} [{cmd_id}]")
             
             # TRG 1: GEOMETRY CREATION -> MAP REFRESH & SORT
             # If new bodies/features created, we must rebuild the map.

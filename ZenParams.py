@@ -77,11 +77,11 @@ class CommandTerminatedHandler(adsk.core.ApplicationCommandEventHandler):
 
 # ... (inside run) ...
 
-        # Command Terminated Handler (Background Watcher)
-        on_term = CommandTerminatedHandler()
-        is_ok = _ui.commandTerminated.add(on_term)
-        _handlers.append(on_term)
-        lib.zen_utils.log_diag(f"Event Subscription: Terminated={is_ok}")
+        # Command Terminated Handler (Background Watcher) - DISABLED FOR STABILITY
+        # on_term = CommandTerminatedHandler()
+        # is_ok = _ui.commandTerminated.add(on_term)
+        # _handlers.append(on_term)
+        # lib.zen_utils.log_diag(f"Event Subscription: Terminated=DISABLED")
 
 class CommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
     def notify(self, args):
