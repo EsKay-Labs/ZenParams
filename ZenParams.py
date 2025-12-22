@@ -67,21 +67,24 @@ class DocumentActivatedHandler(adsk.core.DocumentEventHandler):
 
         except: pass
 
+class CommandStartingHandler(adsk.core.ApplicationCommandEventHandler):
+    def notify(self, args):
+        try:
+             cmd_name = args.command.parentCommandDefinition.name
+             lib.zen_utils.log_diag(f"START-EVT: {cmd_name}")
+        except: pass
+
 class CommandTerminatedHandler(adsk.core.ApplicationCommandEventHandler):
     def notify(self, args):
         global _palette_handler
         try:
+            lib.zen_utils.log_file("MainEvt: Fired") 
+        except: pass
+
+        try:
              if _palette_handler:
                  _palette_handler.on_command_terminated(args)
         except: pass
-
-# ... (inside run) ...
-
-        # Command Terminated Handler (Background Watcher) - DISABLED FOR STABILITY
-        # on_term = CommandTerminatedHandler()
-        # is_ok = _ui.commandTerminated.add(on_term)
-        # _handlers.append(on_term)
-        # lib.zen_utils.log_diag(f"Event Subscription: Terminated=DISABLED")
 
 class CommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
     def notify(self, args):
@@ -168,10 +171,19 @@ def run(context):
         _app.documentActivated.add(on_doc)
         _handlers.append(on_doc)
         
+        
         # Command Terminated Handler (Background Watcher)
         on_term = CommandTerminatedHandler()
-        _ui.commandTerminated.add(on_term)
+        is_ok_term = _ui.commandTerminated.add(on_term)
         _handlers.append(on_term)
+        
+        # Command Starting Handler (Comparison Test)
+        on_start_cmd = CommandStartingHandler()
+        is_ok_start = _ui.commandStarting.add(on_start_cmd)
+        _handlers.append(on_start_cmd)
+        
+        lib.zen_utils.log_diag(f"handlers: {len(_handlers)} | Term={is_ok_term} Start={is_ok_start}")
+        lib.zen_utils.log_diag("ZenParams v11 READY")
         
     except:
         if _ui: _ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
