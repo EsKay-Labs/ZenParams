@@ -266,8 +266,6 @@ function attachDeleteHandlers(context) {
   });
 }
 // Global Shortcuts
-var lastGlobalEnterTime = 0;
-
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape") {
     sendToFusion("close_palette", {});
@@ -278,17 +276,10 @@ document.addEventListener("keydown", function (e) {
     sendToFusion("close_palette", {});
   }
 
-  // Global Double-Enter: Add new parameter anywhere
-  if (e.key === "Enter") {
-    var now = Date.now();
-    if (now - lastGlobalEnterTime < 500) {
-      // 500ms for double-Enter
-      e.preventDefault();
-      addNewRow();
-      lastGlobalEnterTime = 0;
-    } else {
-      lastGlobalEnterTime = now;
-    }
+  // Ctrl+Enter: Add new parameter anywhere
+  if (e.ctrlKey && e.key === "Enter") {
+    e.preventDefault();
+    addNewRow();
   }
 });
 
