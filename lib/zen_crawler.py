@@ -74,6 +74,8 @@ class ZenDependencyCrawler:
                         found_bodies = self.entity_map[target_token]
                         driven_bodies.update(found_bodies)
                         log_diag(f"  MATCH: {target_name} -> {model_param.name} -> {list(found_bodies)}")
+                    elif target_token:
+                        log_diag(f"  MISS: {target_name} -> {model_param.name} (Token {target_token[:5]}... not in map)")
 
         except Exception as e:
             log_diag(f"Param Trace Error: {e}")
