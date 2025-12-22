@@ -1,105 +1,132 @@
-# ⚡ ZenParams PRO ⚡
+# 🧘 ZenParams Pro
 
-### _THE "GOD MODE" PARAMETER MANAGER FOR FUSION 360_
+### The "Right Way" to Parameterize in Fusion 360.
 
-> 🛑 **WARNING:** This plugin will make you physically incapable of tolerating the native Fusion 360 parameter window ever again. Side effects include extreme efficiency, methodical design habits, and a severe reduction in mouse clicks.
+![ZenParams Hero](img/hero.png)
 
-![Main UI](docs/ui_main.png)
-
----
-
-## 😤 THE IRONY (Why this exists)
-
-**Fusion 360 is a masterpiece of modern engineering.** It can simulate stress loads on a rocket engine, generate toolpaths for 5-axis CNCs, and render photorealistic clouds.
-
-**It is also stuck in 1999.**
-
-Why, in the year 2025, are we typing `wall_thickness` into a modal window that looks like it was borrowed from Windows 98 SE? Why do we have to click a tiny `+` button 50 times just to define a box?
-
-You are a creative mastermind, not a data entry temp. **ZenParams PRO** is here to save you from the tyranny of the "Modify Parameters" dialog.
-
-## 🚀 THE SAVIOR (What it does)
-
-**ZenParams PRO** is an **Always-On, High-Velocity Command Center** for your design intent.
-
-- **It Lives on Screen:** Unlike the native modal, ZenParams is a palette. It stays open while you design. You never have to close it.
-- **It Forces Methodical Design:** Because your parameters are instantly accessible and easy to group, you naturally stop using "Magic Numbers" (`10mm`) and start using "Engineering Variables" (`Top_Plate_Thick`).
-- **It Saves Your Sanity:** We timed it. ZenParams cuts the time to create, name, and value a parameter by **70%**.
+> **"If you're hardcoding dimensions in your sketches, you're doing it wrong."** > _— Every Senior CAD Engineer ever._
 
 ---
 
-## 🔬 ANALYTICAL FEATURE BREAKDOWN
+## 🛑 Stop The Madness.
 
-We re-engineered the entire workflow to focus on **Speed**, **Context**, and **Density**.
+You know the drill. You design a beautiful enclosure. It's perfect. Then you buy the bolts and realize they're M3, not M2.5.
+Now you have to hunt down **27 different sketches**, deep dive into **14 timeline features**, and manually change `2.5mm` to `3.0mm`.
 
-### 1. 📉 Smart Compact Layout (The "Density Engine")
+**That is the path of pain.**
 
-![Compact Layout](docs/ui_compact.png)
-
-We realized that screen real estate is precious.
-
-- **Shrink-Wrap Columns**: The Name and Value columns use a custom algorithm to shrink to the _exact_ width of their text. A value of `0.1` takes up 15 pixels. `125.0` takes up 40. No dead space.
-- **Greedy Comment Engine**: The Comment column is programmed to aggressively consume 100% of the remaining space, ensuring your actual data stays tight and readable on the left.
-- **Result**: You can see 30+ parameters at a glance without scrolling.
-
-### 2. ⚡ High-Velocity Data Flow
-
-- **Ctrl + Enter (Global)**: Press this from _anywhere_ to add a row. You don't even need to touch the mouse.
-- **Excel-Style Locking**: Type a value, press **Enter**. It saves instantly and **Locks** the field. No accidental overwrites.
-- **Live Sync**: Changed a dimension in the canvas? ZenParams updates instantly. It’s always watching.
-
-### 3. 🧭 The "Zen Crawler" (Auto-Context)
-
-Fusion 360 doesn't know _what_ your parameters do. **ZenParams does.**
-It crawls your design's timeline, analyzing sketches, features, and faces to map every parameter to its owner.
-
-- **[Body Name]**: Usage is detected automatically. `UserParam` -> `ModelParam` -> `Sketch` -> `Extrude` -> `Body`.
-- **[Shared]**: Detected usage across multiple bodies? It gets tagged as Shared.
-- **[Unused]**: Parameters driving nothing are visually grayed out. Time to clean house.
-
-### 4. 🪄 The Smart Fit Wizard
-
-![Smart Wizard](docs/ui_wizard.png)
-
-Stop doing mental math for 3D printing tolerances.
-
-- **Click The Wand**: Choose a context (e.g., "Heat Set Insert", "Magnet Press Fit").
-- **We Do The Math**: ZenParams calculates the perfect interference/clearance (e.g., `Hole_Dia = 3.8mm` for an M3 insert) based on empirical standards.
-
-### 5. 🛡️ Safety Systems
-
-- **Dependency Guard**: Try to delete a parameter that's driving a feature. **DENIED.** ZenParams tells you exactly what would break, preventing the dreaded "Red Timeline of Death".
-- **Preset Cloning**: Save your "PLA Tolerance Standards" or "CNC Aluminum Specs" as a preset. Load them into any new design with one click.
+**ZenParams** is the path of enlightenment. It forces you to adopt the single most important habit in professional CAD: **Parametric Design.**
 
 ---
 
-## 📦 INSTALLATION (30 Seconds)
+## 🔥 Why ZenParams?
 
-1.  **Download** this repository.
-2.  **Move** the folder to your Fusion 360 Scripts folder:
-    - _Windows_: `%appdata%\Autodesk\Autodesk Fusion 360\API\Scripts\`
-    - _Mac_: `~/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/`
-3.  **Open Fusion 360** -> **Utilities** -> **Scripts and Add-Ins**.
-4.  Find **ZenParams** and click **RUN**.
+### 1. 🧙‍♂️ Smart Fit Wizard (The "Killer" Feature)
 
-> **PRO TIP:** Check "Run on Startup". You will never want to design without this again.
+Stop guessing tolerances.
+"Is a loose fit 0.1mm or 0.2mm?"
+"How much clearance does a 3D printed M3 hole need?"
+
+**ZenParams knows.**
+
+Select a context (Bolt, Magnet, Bearing, Insert), pick your nominal size, and **BOOM**. It calculates the perfect offset based on industry standards (and your own "User Presets").
+
+![Smart Wizard](img/wizard.png)
+
+### 2. ⚡ Live Synchronization
+
+Fusion 360's native parameter window is... a modal dialog from 1995. It blocks your view. It blocks your clicks.
+
+ZenParams lives in a **non-blocking palette**.
+
+- Change a value? **Instant update.**
+- Add a parameter? **Live sync.**
+- No more clicking "OK" just to see if your design broke.
+
+### 3. 💾 Project Templates (Presets)
+
+Do you make enclosures? You probably use the same wall thickness (`2mm`), the same standoffs (`6mm`), and the same tolerance (`0.2mm`) every time.
+
+Save your setup as a **Template**.
+Start a new project -> Load "3D Print Box" -> **Done.**
+
+![Presets Loading](img/presets.png)
+
+### 4. 🧠 Auto-Categorization (The "Zen Mind")
+
+**"But I have 500 parameters in my old design!"**
+
+Don't panic. ZenParams features a **Reverse Dependency Crawler**.
+It scans your entire design history to figure out _what_ your parameters are actually controlling.
+
+- Used in the Lid? -> **Group: Lid**
+- Used in the Mounting Holes? -> **Group: Mounts**
+- Unused? -> **Group: Unused (Clean them up!)**
+
+It works on **existing designs** instantly. No manual tagging required.
+
+### 5. 🛡️ Dependency Protection
+
+ZenParams is your safety net.
+It **won't let you delete a parameter** that is currently holding your assembly together.
+
+- Try to delete a used parameter? **Blocked.**
+- Try to break your model? **Denied.**
+
+### 6. 🎹 Excel-Style "Rapid Entry"
+
+We built this for speed demons.
+
+- **Narrow Mode**: Compact by default to save screen real estate.
+- **Keyboard First**: Type `Name` -> `Tab` -> `Value` -> `Tab` -> `Comment`.
+- **Enter (Once)**: Saves and locks the row.
+- **Enter (Twice)**: Adds a new row instantly.
 
 ---
 
-## 🎮 SHORTCUT CHEAT SHEET
+## 🚀 Features at a Glance
 
-| Shortcut         | Action                             |
-| :--------------- | :--------------------------------- |
-| **Ctrl + Enter** | **Add Parameter** (Works globally) |
-| **Enter**        | **Save & Lock** current field      |
-| **Double Click** | **Edit** a locked field            |
-| **Esc**          | Cancel edit / Hide Palette         |
+| Feature          | The Old Way                      | The Zen Way                          |
+| :--------------- | :------------------------------- | :----------------------------------- |
+| **Workflow**     | sketch -> `d` -> `3.2mm`         | click "M3 Bolt" -> Parameters Update |
+| **Updates**      | Open menu -> Edit -> Enter -> OK | Edit value in panel -> Watch it move |
+| **Organization** | "d1", "d2", "d3"... what is d2?  | Named groups. Clean comments.        |
+| **Sanity**       | 10%                              | 100%                                 |
+
+![Table View](img/table.png)
 
 ---
 
-### 💬 FEEDBACK & LICENSE
+## 🛠️ Installation
 
-Built for **Engineers who value their time**.
-**MIT License**. Free forever.
+1.  **Download** the code (Clone this repo).
+2.  **Move** the `ZenParams` folder to your Fusion 360 Scripts folder:
+    - **Windows**: `%appdata%\Autodesk\Autodesk Fusion 360\API\Scripts\`
+    - **Mac**: `~/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/`
+3.  **Open Fusion 360**.
+4.  Go to **Utilities** -> **Scripts and Add-Ins**.
+5.  Find `ZenParams` under "My Scripts".
+6.  Click **Run**. (Pro tip: Check "Run on Startup").
+7.  **Right-click** "ZenParams" and set a **Keyboard Shortcut** (e.g., `Shift+P`) for instant access.
 
-_"Design like a pro. Parameterize like a Zen Master."_
+### ⌨️ Pro Tips (Keyboard First)
+
+- **Instant Hide**: Press `ESC` to vanish the palette instantly.
+- **Quick Edit**: Double-click any cell to edit. It behaves just like Excel.
+- **Rapid Add**: press `Enter` twice to keep adding parameters without touching the mouse.
+
+---
+
+## 🧘 The Zen Philosophy
+
+**ZenParams** isn't just a tool; it's a mentorship in a box. It gently nudges you away from "Direct Modeling Chaos" and towards "Parametric Bliss."
+
+When you use ZenParams, you aren't just drawing lines. You are defining **Design Intent**.
+
+> _Code is Poetry. CAD is Logic. Parameters are Truth._
+
+---
+
+## 📜 License
+
+MIT. Go forth and parameterize.

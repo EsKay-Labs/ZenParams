@@ -559,26 +559,59 @@
             margin-bottom: 4px;
             font-size: 11px;
           "
-          >Fit Context</label
+          >Parameter Name</label
         >
-        <select
-          id="fit-context"
+        <div style="display: flex; gap: 6px; margin-bottom: 12px">
+          <input
+            type="text"
+            id="fit-name"
+            placeholder="e.g. Hole_M3"
+            style="
+              flex-grow: 1;
+              padding: 6px;
+              background: #1e1e1e;
+              color: #9cdcfe;
+              border: 1px solid #3e3e42;
+            "
+          />
+        </div>
+
+        <label
           style="
-            width: 100%;
-            padding: 6px;
-            margin-bottom: 12px;
-            background: #1e1e1e;
-            color: #ccc;
-            border: 1px solid #3e3e42;
+            display: block;
+            color: #aaa;
+            margin-bottom: 4px;
+            font-size: 11px;
           "
+          >Fit Type</label
         >
-          <option value="bolt">Bolt / Screw Clearance</option>
-          <option value="magnet">Magnet Press Fit</option>
-          <option value="bearing">Bearing Press Fit</option>
-          <option value="insert">Heat Set Insert</option>
-          <option value="lid">Lid / Battery Door (Snug)</option>
-          <option value="slider">Sliding Part</option>
-        </select>
+        <div style="display: flex; gap: 6px; margin-bottom: 12px">
+          <select
+            id="fit-context"
+            style="
+              flex-grow: 1;
+              padding: 6px;
+              background: #1e1e1e;
+              color: #ccc;
+              border: 1px solid #3e3e42;
+            "
+          >
+            <!-- Populated dynamically -->
+          </select>
+          <button
+            id="fit-add-custom-btn"
+            title="Save current tolerance as a new custom fit type"
+            style="
+              background: #252526;
+              border: 1px solid #3e3e42;
+              color: #ccc;
+              cursor: pointer;
+              padding: 0 8px;
+            "
+          >
+            +
+          </button>
+        </div>
 
         <label
           style="
@@ -736,25 +769,73 @@
           >&times;</span
         >
         <h3 style="color: #4ec9b0; margin-top: 0">ZenParams Pro Guide</h3>
-        <ul style="padding-left: 15px; line-height: 1.6">
+        <ul style="padding-left: 15px; line-height: 1.6; margin-bottom: 20px">
           <li>
             <strong>Grouping:</strong> Add
             <code style="background: #333; padding: 2px 4px">[Name]</code> to
             comments to create folders.
           </li>
           <li>
-            <strong>Smart Fits:</strong> Use the
-            <span style="color: #dcdcaa">🪄 Wand</span> to generate tolerances.
-          </li>
-          <li>
             <strong>Rapid Entry:</strong> Press
             <code style="background: #333; padding: 2px 4px">Enter</code> in any
-            field to add a new row instantly.
+            field to add a new row.
           </li>
           <li>
-            <strong>Load:</strong> Apply the selected preset to your design.
+            <strong>Smart Fits:</strong> Use the
+            <span style="color: #dcdcaa">🪄 Wand</span> to generate perfectly
+            toleranced holes/shafts.
           </li>
         </ul>
+
+        <h4 style="color: #4ec9b0; margin-bottom: 8px">
+          Standard Fits Reference
+        </h4>
+        <table
+          style="
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            color: #ccc;
+          "
+        >
+          <thead style="text-align: left; border-bottom: 1px solid #444">
+            <tr>
+              <th style="padding: 4px">Context</th>
+              <th style="padding: 4px">Gap</th>
+              <th style="padding: 4px">Use Case</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding: 4px">Bolt Clearance</td>
+              <td style="color: #ce9178">+0.20mm</td>
+              <td>M3 goes into 3.2mm hole</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px">Magnet Press</td>
+              <td style="color: #ce9178">+0.15mm</td>
+              <td>Tight press for 3D prints</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px">Bearing Press</td>
+              <td style="color: #ce9178">+0.10mm</td>
+              <td>Standard bearings (608zz)</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px">Heat Insert</td>
+              <td style="color: #ce9178">-0.10mm</td>
+              <td>Melts into smaller hole</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px">Slider</td>
+              <td style="color: #ce9178">+0.25mm</td>
+              <td>Free moving parts</td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="font-size: 11px; color: #888; margin-top: 10px">
+          * Tolerances can be calibrated in the Wizard and saved as defaults.
+        </p>
       </div>
     </div>
   </body>

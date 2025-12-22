@@ -4,6 +4,8 @@ console.log("[ZP] Script loading...");
 // Global state
 var GLOBAL_PRESETS = {};
 var GLOBAL_PARAMS = [];
+var FIT_DATA = { standards: [], customs: [] };
+var FIT_LOOKUP = {}; // ID -> Tol
 
 // --- GLOBAL EVENT LISTENER (PUSH FROM PYTHON) ---
 // Defined at top-level to be immediately available when Fusion calls
@@ -31,7 +33,69 @@ window.response = function (dataStr) {
       fillPresets(content.presets || {});
       fillTable(content.params || []);
       updateCurrentPreset(content.current_preset);
-      if (content.fits) FIT_DEFAULTS = content.fits;
+      // 1. Fresh Structure (Backwards Compatible check)
+      if (content.fits && content.fits.standards) {
+        FIT_DATA = content.fits;
+      } else {
+        // 2. Fallback: Backend sent old flat dict OR nothing
+        var rawFits = content.fits || {};
+        console.log("[ZP] Converting legacy/missing fit data locally...");
+        var legacyStandards = [];
+        var legacyCustoms = [];
+
+        // Known Map (must match desired defaults)
+        var MAP = {
+          bolt: { l: "Bolt Clearance", g: "3D Printing" },
+          magnet: { l: "Magnet Press", g: "3D Printing" },
+          bearing: { l: "Bearing Press", g: "3D Printing" },
+          insert: { l: "Heat Set Insert", g: "3D Printing" },
+          lid: { l: "Lid (Snug)", g: "3D Printing" },
+          slider: { l: "Slider / Moving", g: "3D Printing" },
+          iso_h7: { l: "ISO H7 (Sliding)", g: "Mechanical" },
+          iso_p7: { l: "ISO P7 (Press)", g: "Mechanical" },
+          cnc_clr: { l: "CNC Clearance", g: "Mechanical" },
+        };
+
+        // A. Process what we received
+        for (var key in rawFits) {
+          var val = rawFits[key];
+          if (MAP[key]) {
+            legacyStandards.push({
+              id: key,
+              label: MAP[key].l,
+              group: MAP[key].g,
+              tol: val,
+            });
+          } else {
+            legacyCustoms.push({
+              id: key,
+              label: key,
+              group: "Custom",
+              tol: val,
+            });
+          }
+        }
+
+        // B. Inject missing defaults (If backend is REALLY old/empty)
+        for (var k in MAP) {
+          if (!rawFits.hasOwnProperty(k)) {
+            // Guess default
+            var dVal = 0.1;
+            if (k === "bolt") dVal = 0.2;
+            else if (k === "insert") dVal = -0.1;
+            else if (k === "slider") dVal = 0.25;
+
+            legacyStandards.push({
+              id: k,
+              label: MAP[k].l,
+              group: MAP[k].g,
+              tol: dVal,
+            });
+          }
+        }
+
+        FIT_DATA = { standards: legacyStandards, customs: legacyCustoms };
+      }
 
       var legacyNotice = document.getElementById("legacy-notice");
       if (legacyNotice) {
@@ -587,22 +651,156 @@ document.addEventListener("DOMContentLoaded", function () {
   var fitCreateBtn = document.getElementById("fit-create");
   var fitCancelBtn = document.getElementById("fit-cancel");
   var fitSaveDefBtn = document.getElementById("fit-save-def");
+  var fitAddCustomBtn = document.getElementById("fit-add-custom-btn");
 
   // Inputs
-  var ctxInput = document.getElementById("fit-context");
+  var ctxSelect = document.getElementById("fit-context");
+  var nameInput = document.getElementById("fit-name");
   var sizeInput = document.getElementById("fit-size");
   var tolInput = document.getElementById("fit-tol");
   var previewEl = document.getElementById("fit-preview");
 
-  // Defaults Map (Will be overwritten by backend)
-  var FIT_DEFAULTS = {
-    bolt: 0.2,
-    magnet: 0.15,
-    bearing: 0.1,
-    insert: -0.1,
-    lid: 0.15,
-    slider: 0.25,
-  };
+  // Data Store
+  // MOVED TO GLOBAL SCOPE
+
+  function refreshFitLookup() {
+    FIT_LOOKUP = {};
+    if (FIT_DATA.standards) {
+      FIT_DATA.standards.forEach(function (f) {
+        FIT_LOOKUP[f.id] = f.tol;
+      });
+    }
+    if (FIT_DATA.customs) {
+      FIT_DATA.customs.forEach(function (f) {
+        FIT_LOOKUP[f.id] = f.tol;
+      });
+    }
+  }
+
+  function initFitUI() {
+    if (!ctxSelect) return;
+
+    // FAILSAFE: If no data loaded (frontend restart without backend push), use defaults
+    if (!FIT_DATA.standards || FIT_DATA.standards.length === 0) {
+      console.warn("[ZP] FIT_DATA empty in UI Init - injecting defaults");
+      var legacyStandards = [
+        { id: "bolt", label: "Bolt Clearance", group: "3D Printing", tol: 0.2 },
+        {
+          id: "magnet",
+          label: "Magnet Press",
+          group: "3D Printing",
+          tol: 0.15,
+        },
+        {
+          id: "bearing",
+          label: "Bearing Press",
+          group: "3D Printing",
+          tol: 0.1,
+        },
+        {
+          id: "insert",
+          label: "Heat Set Insert",
+          group: "3D Printing",
+          tol: -0.1,
+        },
+        { id: "lid", label: "Lid (Snug)", group: "3D Printing", tol: 0.15 },
+        {
+          id: "slider",
+          label: "Slider / Moving",
+          group: "3D Printing",
+          tol: 0.25,
+        },
+        {
+          id: "iso_h7",
+          label: "ISO H7 (Sliding)",
+          group: "Mechanical",
+          tol: 0.012,
+        },
+        {
+          id: "iso_p7",
+          label: "ISO P7 (Press)",
+          group: "Mechanical",
+          tol: -0.015,
+        },
+        {
+          id: "cnc_clr",
+          label: "CNC Clearance",
+          group: "Mechanical",
+          tol: 0.1,
+        },
+      ];
+      FIT_DATA.standards = legacyStandards;
+    }
+
+    refreshFitLookup();
+    ctxSelect.innerHTML = "";
+
+    // Helper to add OptGroup
+    function addGroup(label, items) {
+      if (!items || items.length === 0) return;
+      var grp = document.createElement("optgroup");
+      grp.label = label;
+      items.forEach(function (item) {
+        var opt = document.createElement("option");
+        opt.value = item.id;
+        opt.textContent =
+          item.label + (item.tol > 0 ? " (+" : " (") + item.tol + ")";
+        grp.appendChild(opt);
+      });
+      ctxSelect.appendChild(grp);
+    }
+
+    // 1. Group Standards
+    var groups = {};
+    FIT_DATA.standards.forEach(function (f) {
+      var g = f.group || "General";
+      if (!groups[g]) groups[g] = [];
+      groups[g].push(f);
+    });
+
+    for (var gName in groups) {
+      addGroup(gName, groups[gName]);
+    }
+
+    // 2. Customs
+    if (FIT_DATA.customs && FIT_DATA.customs.length > 0) {
+      addGroup("User Custom", FIT_DATA.customs);
+    }
+
+    // Trigger update
+    updateFitContext();
+  }
+
+  function updateFitContext() {
+    var val = ctxSelect.value;
+    if (FIT_LOOKUP.hasOwnProperty(val)) {
+      tolInput.value = FIT_LOOKUP[val];
+      updatePreview();
+      autoGenerateName();
+    }
+  }
+
+  function autoGenerateName() {
+    // Only auto-gen if user hasn't typed a custom one?
+    // Or just overwrite? Let's overwrite for now, user can edit after.
+    // Better: check if it matches a pattern.
+    var ctx = ctxSelect.value;
+    var size = parseFloat(sizeInput.value) || 0;
+    var base = "";
+
+    // Simple heuristic for defaults
+    if (ctx.includes("bolt") || ctx.includes("hole")) base = "Hole_M" + size;
+    else if (ctx.includes("magnet")) base = "Mag_" + size + "mm";
+    else if (ctx.includes("bearing")) base = "Brg_" + size + "mm";
+    else if (ctx.includes("insert")) base = "Ins_M" + Math.floor(size);
+    else if (ctx.includes("lid")) base = "Lid_Gap";
+    else if (ctx.includes("slider")) base = "Slide_Gap";
+    else base = "Fit_" + size + "mm";
+
+    // If existing value is empty or looks like an auto-gen, update it
+    // Simple verification: Update always for wizard-like feel
+    if (nameInput) nameInput.value = base;
+  }
 
   function updatePreview() {
     if (!sizeInput || !tolInput) return;
@@ -612,15 +810,12 @@ document.addEventListener("DOMContentLoaded", function () {
     if (previewEl) previewEl.textContent = res + "mm";
   }
 
+  // --- Handlers ---
+
   if (fitBtn && fitModal) {
     fitBtn.onclick = function () {
       fitModal.style.display = "block";
-      // Load default for current selection
-      var val = ctxInput.value;
-      if (FIT_DEFAULTS.hasOwnProperty(val)) {
-        tolInput.value = FIT_DEFAULTS[val];
-        updatePreview();
-      }
+      initFitUI();
       sizeInput.focus();
     };
 
@@ -628,68 +823,104 @@ document.addEventListener("DOMContentLoaded", function () {
       fitModal.style.display = "none";
     };
 
-    // Auto-update Tolerance when Context changes
-    if (ctxInput) {
-      ctxInput.onchange = function () {
-        var val = ctxInput.value;
-        if (FIT_DEFAULTS.hasOwnProperty(val)) {
-          tolInput.value = FIT_DEFAULTS[val];
-          updatePreview();
+    if (ctxSelect) ctxSelect.onchange = updateFitContext;
+    if (sizeInput) {
+      sizeInput.oninput = function () {
+        updatePreview();
+        autoGenerateName();
+      };
+    }
+    if (tolInput) tolInput.oninput = updatePreview;
+
+    // SAVE DEFAULTS
+    if (fitSaveDefBtn) {
+      fitSaveDefBtn.onclick = function () {
+        var ctxId = ctxSelect.value;
+        var tol = parseFloat(tolInput.value) || 0;
+
+        // Is it Standard or Custom?
+        var isCustom = false;
+        var customIdx = -1;
+
+        if (FIT_DATA.customs) {
+          customIdx = FIT_DATA.customs.findIndex(function (c) {
+            return c.id === ctxId;
+          });
+          if (customIdx >= 0) isCustom = true;
         }
+
+        if (isCustom) {
+          // Update Custom
+          FIT_DATA.customs[customIdx].tol = tol;
+        } else {
+          // Update Standard (in memory)
+          var std = FIT_DATA.standards.find(function (s) {
+            return s.id === ctxId;
+          });
+          if (std) std.tol = tol;
+        }
+
+        // Refresh Lookup & UI text
+        refreshFitLookup();
+        initFitUI(); // Re-render to show new tolerance in dropdown
+        ctxSelect.value = ctxId; // Restore selection
+
+        // PREPARE PAYLOAD { overrides: {}, custom: [] }
+        var payload = { overrides: {}, custom: FIT_DATA.customs || [] };
+        FIT_DATA.standards.forEach(function (s) {
+          // If it differs from HARDCODED default?
+          // We don't know hardcoded here easily.
+          // Simpler: Just save ALL standards as overrides?
+          // Or better: The backend handles "overrides".
+          // So we send { overrides: {id: tol}, ... }
+          // Let's just send the current state of standards as overrides map.
+          payload.overrides[s.id] = s.tol;
+        });
+
+        sendToFusion("save_fit_defaults", { fits: payload });
+        setStatus("Saved default for " + ctxId, "success");
       };
     }
 
-    // Live Preview
-    if (sizeInput) sizeInput.oninput = updatePreview;
-    if (tolInput) tolInput.oninput = updatePreview;
+    // ADD CUSTOM FIT
+    if (fitAddCustomBtn) {
+      fitAddCustomBtn.onclick = function () {
+        var label = prompt("Enter name for new Fit Type (e.g. 'Laser Kerf'):");
+        if (!label) return;
 
-    // Save Defaults
-    if (fitSaveDefBtn) {
-      fitSaveDefBtn.onclick = function () {
-        var ctx = ctxInput.value;
-        var tol = parseFloat(tolInput.value) || 0;
+        var id = "custom_" + label.toLowerCase().replace(/[^a-z0-9]/g, "_");
+        var newFit = {
+          id: id,
+          label: label,
+          group: "Custom",
+          tol: 0.1,
+        };
 
-        // Update Local
-        FIT_DEFAULTS[ctx] = tol;
+        if (!FIT_DATA.customs) FIT_DATA.customs = [];
+        FIT_DATA.customs.push(newFit);
 
-        // Send to Backend
-        sendToFusion("save_fit_defaults", { fits: FIT_DEFAULTS });
-        setStatus("Saving default for " + ctx + "...", "info");
+        refreshFitLookup();
+        initFitUI();
+        ctxSelect.value = id;
+        updateFitContext();
+
+        // Auto-save existence
+        fitSaveDefBtn.click();
       };
     }
 
     fitCreateBtn.onclick = function () {
-      var ctx = ctxInput.value;
+      var name = nameInput.value || "New_Param";
       var size = parseFloat(sizeInput.value) || 0;
       var tol = parseFloat(tolInput.value) || 0;
       var sign = tol >= 0 ? "+" : "-";
       var absTol = Math.abs(tol);
 
-      // GENERATE LOGIC
-      var name = "";
+      // GENERATE
       var expr = size + "mm " + sign + " " + absTol + "mm";
-      var comment = "[SmartFit] ";
-
-      if (ctx === "bolt") {
-        name = "Hole_M" + size;
-        comment += "M" + size + " Clearance";
-      } else if (ctx === "magnet") {
-        name = "Mag_" + size + "mm";
-        comment += "Magnet Press";
-      } else if (ctx === "bearing") {
-        name = "Brg_" + size + "mm";
-        comment += "Bearing Press";
-      } else if (ctx === "insert") {
-        name = "Ins_M" + Math.floor(size);
-        comment += "Heat Set Insert";
-      } else if (ctx === "lid") {
-        name = "Lid_Gap";
-        expr = absTol + "mm"; // Lids are usually just the gap value
-        comment += "Friction Fit Lid";
-      } else {
-        name = "Fit_Gen";
-        comment += "General Clearance";
-      }
+      var comment =
+        "[SmartFit] " +
+        (ctxSelect.options[ctxSelect.selectedIndex].text || "Custom Gap");
 
       // Insert
       var tbody = document.querySelector("#param-table tbody");
@@ -725,7 +956,7 @@ document.addEventListener("DOMContentLoaded", function () {
       sendToFusion("batch_update", { items: changes, suppress_refresh: false });
 
       fitModal.style.display = "none";
-      setStatus("Created Smart Fit: " + name, "success");
+      setStatus("Created: " + name, "success");
     };
   }
 

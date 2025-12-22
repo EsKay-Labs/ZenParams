@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.log
+zen_debug.log
+user_presets.json
+.vscode/
+.DS_Store
