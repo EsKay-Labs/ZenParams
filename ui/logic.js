@@ -24,6 +24,9 @@ function fillPresets(presets) {
 
 // Fill params table with Grouping
 function fillTable(params) {
+  console.log(
+    "[ZP] fillTable called with " + (params ? params.length : "null") + " items"
+  );
   GLOBAL_PARAMS = params;
   var tbody = document.querySelector("#param-table tbody");
   if (!tbody) return;

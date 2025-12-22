@@ -382,31 +382,52 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
 
             # User Params
             for param in design.userParameters:
-                if param.name == '_zen_current_preset': continue
-                group, clean_cmt = parse_group(param.comment)
-                param_list.append({
-                    'name': param.name, 'expression': param.expression,
-                    'unit': param.unit, 'comment': clean_cmt, 
-                    'group': group, 'fullComment': param.comment,
-                    'isUser': True
-                })
+                try:
+                    if param.name == '_zen_current_preset': continue
+                    # Safely access properties
+                    name = param.name
+                    expr = param.expression
+                    unit = param.unit
+                    full_cmt = param.comment
+                    
+                    group, clean_cmt = parse_group(full_cmt)
+                    
+                    param_list.append({
+                        'name': name, 'expression': expr,
+                        'unit': unit, 'comment': clean_cmt, 
+                        'group': group, 'fullComment': full_cmt,
+                        'isUser': True
+                    })
+                except: continue # Skip bad apple
             
             # Model Params (Limit 50)
             count = 0
             for param in design.allParameters:
                 if count > 50: break
-                if design.userParameters.itemByName(param.name): continue
-                # Model params don't usually have comments we control, but just in case
-                group, clean_cmt = parse_group(param.comment)
-                param_list.append({
-                    'name': param.name, 'expression': param.expression,
-                    'unit': param.unit, 'comment': clean_cmt, 
-                    'group': "Model Parameters", 'fullComment': param.comment,
-                    'isUser': False
-                })
-                count += 1
+                try:
+                    if design.userParameters.itemByName(param.name): continue
+                    
+                    name = param.name
+                    expr = param.expression
+                    unit = param.unit
+                    full_cmt = param.comment
+                    
+                    group, clean_cmt = parse_group(full_cmt)
+                    
+                    param_list.append({
+                        'name': name, 'expression': expr,
+                        'unit': unit, 'comment': clean_cmt, 
+                        'group': "Model Parameters", 'fullComment': full_cmt,
+                        'isUser': False
+                    })
+                    count += 1
+                except: continue
+
+            # log_diag(f"Generated Param List: {len(param_list)} items")
             return param_list
-        except: return []
+        except Exception as e:
+            log_diag(f"get_param_list Crash: {e}")
+            return []
 
     def _gather_payload_dict(self):
         presets = self.preset_manager.load_all()
