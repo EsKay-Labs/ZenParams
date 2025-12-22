@@ -5,6 +5,7 @@ import json
 # Global reference for logging
 _app = None
 _ui = None
+APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def log_diag(msg: str):
     """Writes to the Fusion 360 Text Commands palette."""
@@ -16,6 +17,14 @@ def log_diag(msg: str):
             cmd_palette.writeText(f"[ZenParams] {msg}")
     except:
         pass
+
+def log_file(msg: str):
+    """Writes to a log file to avoid Event Loop Freezes."""
+    try:
+        log_path = os.path.join(APP_PATH, 'zen_debug.log')
+        with open(log_path, 'a', encoding='utf-8') as f:
+            f.write(f"{time.ctime()}: {msg}\n")
+    except: pass
 
 class BaseJsonManager:
     """Base class for JSON file management."""

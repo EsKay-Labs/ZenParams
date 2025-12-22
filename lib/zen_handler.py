@@ -4,7 +4,7 @@ import json
 import traceback
 import time
 import re
-from .zen_utils import log_diag, PresetManager, FitManager
+from .zen_utils import log_diag, log_file, PresetManager, FitManager
 from .zen_crawler import ZenDependencyCrawler
 
 class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
@@ -32,8 +32,8 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             # Avoid infinite loop: Text Command writes trigger this event!
             if 'TextCommandInput' in cmd_id: return
 
-            # Debug: See what commands are firing
-            # log_diag(f"Cmd Terminated: {cmd_name} [{cmd_id}]")
+            # Debug: See what commands are firing (SAFE)
+            log_file(f"Cmd Terminated: {cmd_name} [{cmd_id}]")
             
             # TRG 1: GEOMETRY CREATION -> MAP REFRESH & SORT
             # If new bodies/features created, we must rebuild the map.
@@ -47,7 +47,7 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             is_usage = any(x in cmd_name or x in cmd_id for x in usage_cmds)
             
             if is_geo or is_usage:
-                log_diag(f"Trigger: {cmd_name} (Refreshing Map)")
+                log_file(f"Trigger: {cmd_name} (Refreshing Map)")
                 # ALWAYS refresh map to ensure new sketches/features are found
                 self._auto_sort_params(force_map_refresh=True)
                 self._send_all_params()
