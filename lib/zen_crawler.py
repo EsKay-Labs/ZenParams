@@ -74,6 +74,19 @@ class ZenDependencyCrawler:
                         found_bodies = self.entity_map[target_token]
                         driven_bodies.update(found_bodies)
                         log_diag(f"  MATCH: {target_name} -> {model_param.name} -> {list(found_bodies)}")
+                    
+                    elif creator and hasattr(creator, 'parentComponent'):
+                        # Fallback: If not mapped to a body (e.g. unconsumed sketch),
+                        # See if it belongs to a sub-component (not Root).
+                        comp = creator.parentComponent
+                        root = self.design.rootComponent
+                        if comp and comp.name != root.name:
+                             driven_bodies.add(comp.name)
+                             log_diag(f"  FALLBACK: {target_name} -> Component '{comp.name}'")
+                        elif target_token:
+                             creator_type = creator.objectType if hasattr(creator, 'objectType') else type(creator).__name__
+                             log_diag(f"  MISS: {target_name} -> {creator_type} (Unconsumed in Root)")
+                    
                     elif target_token:
                         creator_type = creator.objectType if hasattr(creator, 'objectType') else type(creator).__name__
                         log_diag(f"  MISS: {target_name} -> {model_param.name} [{creator_type}] (Token {target_token[:5]}... not in map)")
