@@ -470,10 +470,15 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                     unit = param.unit
                     full_cmt = param.comment
                     
+                    # Strip unit from expression for display
+                    display_val = expr
+                    if unit and expr.endswith(unit):
+                        display_val = expr[:-len(unit)].strip()
+                    
                     group, clean_cmt = parse_group(full_cmt)
                     
                     param_list.append({
-                        'name': name, 'expression': expr,
+                        'name': name, 'expression': display_val,
                         'unit': unit, 'comment': clean_cmt, 
                         'group': group, 'fullComment': full_cmt,
                         'isUser': True
@@ -492,10 +497,15 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                     unit = param.unit
                     full_cmt = param.comment
                     
+                    # Strip unit from expression for display
+                    display_val = expr
+                    if unit and expr.endswith(unit):
+                        display_val = expr[:-len(unit)].strip()
+                    
                     group, clean_cmt = parse_group(full_cmt)
                     
                     param_list.append({
-                        'name': name, 'expression': expr,
+                        'name': name, 'expression': display_val,
                         'unit': unit, 'comment': clean_cmt, 
                         'group': "Model Parameters", 'fullComment': full_cmt,
                         'isUser': False
