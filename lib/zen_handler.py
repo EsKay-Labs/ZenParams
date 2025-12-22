@@ -47,8 +47,9 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             is_usage = any(x in cmd_name or x in cmd_id for x in usage_cmds)
             
             if is_geo or is_usage:
-                log_diag(f"Trigger: {cmd_name} (Geo={is_geo})")
-                self._auto_sort_params(force_map_refresh=is_geo)
+                log_diag(f"Trigger: {cmd_name} (Refreshing Map)")
+                # ALWAYS refresh map to ensure new sketches/features are found
+                self._auto_sort_params(force_map_refresh=True)
                 self._send_all_params()
 
         except:
