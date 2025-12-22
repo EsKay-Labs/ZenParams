@@ -265,8 +265,9 @@ function attachDeleteHandlers(context) {
     };
   });
 }
-
 // Global Shortcuts
+var lastGlobalEnterTime = 0;
+
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape") {
     sendToFusion("close_palette", {});
@@ -275,6 +276,19 @@ document.addEventListener("keydown", function (e) {
   if (e.ctrlKey && (e.key === "p" || e.key === "P")) {
     e.preventDefault();
     sendToFusion("close_palette", {});
+  }
+
+  // Global Double-Enter: Add new parameter anywhere
+  if (e.key === "Enter") {
+    var now = Date.now();
+    if (now - lastGlobalEnterTime < 500) {
+      // 500ms for double-Enter
+      e.preventDefault();
+      addNewRow();
+      lastGlobalEnterTime = 0;
+    } else {
+      lastGlobalEnterTime = now;
+    }
   }
 });
 
@@ -313,29 +327,18 @@ function attachEnterHandlers(context) {
           return;
         }
 
-        // If Editable -> Save / New Row
-        var tr = inp.closest("tr");
-        var now = Date.now();
-
-        // 1. Always Sync
+        // If Editable -> Save and exit edit mode
+        // (Double-Enter is handled globally)
         var changes = gatherTableData();
         sendToFusion("batch_update", {
           items: changes,
           suppress_refresh: true,
         });
 
-        // 2. Double Enter Check
-        if (lastEnterRow === tr && now - lastEnterTime < 3000) {
-          addNewRow();
-          lastEnterTime = 0;
-          lastEnterRow = null;
-        } else {
-          lastEnterTime = now;
-          lastEnterRow = tr;
-          // Exit edit mode - lock but keep focus for double-Enter
-          inp.readOnly = true;
-          setStatus("Saved. Press Enter again to add new.", "info");
-        }
+        // Exit edit mode
+        inp.readOnly = true;
+        inp.blur();
+        setStatus("Saved.", "success");
       }
     };
   });
