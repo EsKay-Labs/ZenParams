@@ -146,17 +146,25 @@ function fillTable(params) {
 
       if (p.isUser) {
         tr.dataset.user = "true";
+        // Calculate initial width based on char count + buffer
+        var nameW = Math.max(2, p.name.length + 1) + "ch";
+        var exprW = Math.max(2, String(p.expression).length + 3) + "ch"; // +3 buffer for edits
+
         tr.innerHTML =
-          '<td><input type="text" readonly class="tbl-input name" value="' +
+          '<td><input type="text" readonly class="tbl-input name" style="width:' +
+          nameW +
+          '" value="' +
           p.name +
-          '"></td>' +
-          '<td><input type="text" readonly class="tbl-input expr" value="' +
+          '" oninput="this.style.width = Math.max(2, this.value.length + 1) + \'ch\'"></td>' +
+          '<td><input type="text" readonly class="tbl-input expr" style="width:' +
+          exprW +
+          '" value="' +
           p.expression +
-          '"></td>' +
+          '" oninput="this.style.width = Math.max(2, this.value.length + 3) + \'ch\'"></td>' +
           '<td style="font-size:11px; color:#666;">' +
           (p.unit || "") +
           "</td>" +
-          '<td><input type="text" readonly class="tbl-input comment" value="' +
+          '<td><input type="text" readonly class="tbl-input comment" style="width:100%" value="' +
           (p.comment || "") +
           '"></td>' +
           '<td><button class="row-delete" title="Delete">×</button></td>';
