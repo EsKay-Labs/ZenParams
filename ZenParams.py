@@ -71,7 +71,7 @@ class CommandTerminatedHandler(adsk.core.ApplicationCommandEventHandler):
     def notify(self, args):
         global _palette_handler
         # Debug: Confirm Add-In hears the event
-        # lib.zen_utils.log_diag(f"MainEvt: {args.command.parentCommandDefinition.name}")
+        lib.zen_utils.log_diag(f"MainEvt: {args.command.parentCommandDefinition.name}")
         
         try:
              if _palette_handler:
@@ -79,6 +79,14 @@ class CommandTerminatedHandler(adsk.core.ApplicationCommandEventHandler):
              else:
                  lib.zen_utils.log_diag("Error: Palette Handler is None!")
         except: pass
+
+# ... (inside run) ...
+
+        # Command Terminated Handler (Background Watcher)
+        on_term = CommandTerminatedHandler()
+        is_ok = _ui.commandTerminated.add(on_term)
+        _handlers.append(on_term)
+        lib.zen_utils.log_diag(f"Event Subscription: Terminated={is_ok}")
 
 class CommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
     def notify(self, args):
