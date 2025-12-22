@@ -146,6 +146,7 @@ def run(context):
         show_palette()
         
         lib.zen_utils.log_diag("ZenParams v11 STARTUP: Handlers Registered")
+        lib.zen_utils.log_file(f"ZenParams Startup. Handlers: {len(_handlers)}")
         
         # Startup Handler
         if not _app.isStartupComplete:
