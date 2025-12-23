@@ -271,10 +271,17 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
         except: pass
 
     def _handle_batch_update(self, data, args):
-        items = data.get('items', [])
-        suppress = data.get('suppress_refresh', False)
+        items = []
+        suppress = False
         
+        if isinstance(data, list):
+            items = data
+        elif isinstance(data, dict):
+            items = data.get('items', [])
+            suppress = data.get('suppress_refresh', False)
+            
         count = 0
+        new_param_created = False  # Track if we created any new parameters
         try:
             app = adsk.core.Application.get()
             design = adsk.fusion.Design.cast(app.activeProduct)
@@ -316,6 +323,7 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
                              # Create new
                              design.userParameters.add(name, adsk.core.ValueInput.createByString(expr), "mm", comment or "")
                              count += 1
+                             new_param_created = True  # Flag that we created a new parameter
                 except:
                     continue
             
@@ -326,7 +334,12 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             log_diag(f"Batch Update Error: {e}")
         
         if not suppress:
-            self._send_all_params()
+            # If we created new parameters, auto-sort to put them in correct folders
+            if new_param_created:
+                log_diag("Auto-sorting after new parameter creation...")
+                self._auto_sort_params(force_map_refresh=False)  # Sort will also send params
+            else:
+                self._send_all_params()
 
     def _handle_delete_param(self, data, args):
         """
