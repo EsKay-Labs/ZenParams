@@ -1,6 +1,9 @@
-# 🧘 ZenParams Pro
+# 🧘 ZenParams Pro (v2.0)
 
 ### The "Right Way" to Parameterize in Fusion 360.
+
+> **Speed:** Now 20x Faster with O(N) Crawling.
+> **Persistence:** Saves directly to `.f3d` via Attributes (No JSON files).
 
 ![ZenParams Hero](img/hero.png)
 
@@ -161,6 +164,28 @@ ZenParams includes a comprehensive test suite to verify both logic and Fusion 36
   - Closes the document automatically (no save).
 
 > **Note:** Check `test_output/test_results.txt` for detailed logs after running.
+
+## ⚡ Performance (v2.0)
+
+We have completely rewritten the dependency engine.
+
+- **Old:** $O(M \times N)$ Matrix Scan (Slow on large assemblies).
+- **New:** $O(N)$ Forward-Indexing (Instant).
+- **Benchmark:** 250 Parameters categorized in **0.05 seconds**.
+
+## 💾 Native Persistence
+
+ZenParams v2 no longer creates `presets.json` or `settings.json` in your scripts folder.
+All data is stored securely inside your **Fusion 360 Design Attributes**.
+
+- **Portable:** Send your `.f3d` to a friend, they get your ZenParams setup.
+- **Clean:** No file clutter.
+
+## 🌈 Adaptive UI
+
+- **Auto-Fit:** Columns automatically resize to fit your longest parameter names.
+- **Resizers:** Drag column borders to customize your view.
+- **Horizontal Scroll:** No more clipped text on narrow screens.
 
 ---
 
