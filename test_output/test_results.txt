@@ -21,6 +21,6 @@ Traceback (most recent call last):
 AssertionError: False is not true : Expected '[SortingBody]' in comment, but got: '[(Unsaved)/SortingBody] Old Comment'
 
 ----------------------------------------------------------------------
-Ran 6 tests in 1.911s
+Ran 6 tests in 2.528s
 
 FAILED (failures=1)
