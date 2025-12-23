@@ -179,6 +179,7 @@ function fillTable(params) {
 
     // Click handler
     div.onclick = function () {
+      console.log("[ZP] Group Clicked: " + gName);
       div.classList.toggle("collapsed");
       var isClosed = div.classList.contains("collapsed");
 
@@ -186,16 +187,19 @@ function fillTable(params) {
       var toggle = div.querySelector(".group-toggle");
       if (toggle) toggle.innerText = isClosed ? "►" : "▼";
 
-      var rows = document.querySelectorAll(
-        '.group-row[data-group="' + gName + '"]'
-      );
-      rows.forEach(function (r) {
-        if (isClosed) {
-          r.classList.add("hidden-row");
-        } else {
-          r.classList.remove("hidden-row");
+      var allRows = tbody.querySelectorAll("tr.group-row");
+      var count = 0;
+      allRows.forEach(function (r) {
+        if (r.dataset.group === gName) {
+          count++;
+          if (isClosed) {
+            r.classList.add("hidden-row");
+          } else {
+            r.classList.remove("hidden-row");
+          }
         }
       });
+      console.log("[ZP] Toggled " + count + " rows for group: " + gName);
     };
 
     td.appendChild(div);
@@ -210,21 +214,13 @@ function fillTable(params) {
 
       if (p.isUser) {
         tr.dataset.user = "true";
-        // Calculate initial width based on char count + buffer
-        var nameW = Math.max(2, p.name.length + 1) + "ch";
-        var exprW = Math.max(2, String(p.expression).length + 3) + "ch"; // +3 buffer for edits
-
         tr.innerHTML =
-          '<td><input type="text" readonly class="tbl-input name" style="width:' +
-          nameW +
-          '" value="' +
+          '<td><input type="text" readonly class="tbl-input name" style="width:100%" value="' +
           p.name +
-          '" oninput="this.style.width = Math.max(2, this.value.length + 1) + \'ch\'"></td>' +
-          '<td><input type="text" readonly class="tbl-input expr" style="width:' +
-          exprW +
-          '" value="' +
+          '"></td>' +
+          '<td><input type="text" readonly class="tbl-input expr" style="width:100%" value="' +
           p.expression +
-          '" oninput="this.style.width = Math.max(2, this.value.length + 3) + \'ch\'"></td>' +
+          '"></td>' +
           '<td style="font-size:11px; color:#666;">' +
           (p.unit || "") +
           "</td>" +
@@ -256,6 +252,60 @@ function fillTable(params) {
   // Attach delete handlers
   attachDeleteHandlers();
   attachEnterHandlers();
+
+  // Trigger Auto-Size
+  if (params.length > 0) {
+    setTimeout(function () {
+      autoSizeColumns(params);
+    }, 50);
+  }
+}
+
+// --- AUTO-SIZE COLUMNS LOGIC (ADAPTIVE) ---
+function autoSizeColumns(params) {
+  if (!params || params.length === 0) return;
+
+  // 1. Calculate Max Lengths (across ALL params, including hidden)
+  var maxNameLen = 10;
+  var maxExprLen = 10;
+
+  params.forEach(function (p) {
+    if (p.name && p.name.length > maxNameLen) maxNameLen = p.name.length;
+    if (p.expression && String(p.expression).length > maxExprLen)
+      maxExprLen = String(p.expression).length;
+  });
+
+  // Cap max length to prevent insanity
+  if (maxNameLen > 80) maxNameLen = 80;
+  if (maxExprLen > 80) maxExprLen = 80;
+
+  // 2. Convert to Pixels (Liberal padding)
+  var namePx = maxNameLen * 8 + 40;
+  var exprPx = maxExprLen * 8 + 40;
+
+  // 3. Get Headers
+  var table = document.getElementById("param-table");
+  if (!table) return;
+  var ths = table.querySelectorAll("th");
+  if (ths.length < 5) return;
+
+  // Scale Name Column (Index 0)
+  if (namePx < 120) namePx = 120; // Absolute Min
+
+  // Scale Value Column (Index 1)
+  if (exprPx < 120) exprPx = 120; // Absolute Min
+
+  // Apply and Log
+  ths[0].style.width = namePx + "px";
+  ths[1].style.width = exprPx + "px";
+
+  // Fixed Columns
+  ths[2].style.width = "50px";
+  ths[4].style.width = "34px";
+
+  // Comment (Index 3) - Auto rest
+
+  console.log("[ZP] Auto-Sized: Name=" + namePx + "px, Value=" + exprPx + "px");
 }
 
 // Real-time search filter

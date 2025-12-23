@@ -126,6 +126,7 @@
       .table-container {
         flex-grow: 1;
         overflow-y: auto;
+        overflow-x: auto; /* Allow horizontal scrolling */
         border: 1px solid #3e3e42;
         border-radius: 4px;
         background: #252526;
@@ -133,7 +134,7 @@
       table {
         width: 100%;
         border-collapse: collapse;
-        table-layout: auto; /* Content-based sizing */
+        table-layout: fixed; /* Fixed layout for manual resizing */
       }
       th {
         background: #2d2d2d;
