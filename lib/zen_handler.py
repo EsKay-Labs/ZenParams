@@ -6,6 +6,7 @@ import time
 import re
 from .zen_utils import log_diag, log_file, PresetManager, FitManager
 from .zen_crawler import ZenDependencyCrawler
+from .zen_storage import ZenStorage
 
 class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
     """Handles messages coming from the HTML Palette."""
@@ -248,27 +249,21 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
 
     def _handle_set_current_preset(self, data, args):
         preset_name = data.get('name')
-        if not preset_name:
-             # Clear preset
-             self._set_preset_param(None)
-        else:
-             self._set_preset_param(preset_name)
-        self._send_initial_data()
-
-    def _set_preset_param(self, name):
+        
         try:
             app = adsk.core.Application.get()
             design = adsk.fusion.Design.cast(app.activeProduct)
-            if not design: return
-            p_name = '_zen_current_preset'
-            exist = design.userParameters.itemByName(p_name)
-            if name:
-                if exist: exist.comment = name
-                else: design.userParameters.add(p_name, adsk.core.ValueInput.createByString('1'), '', name)
-            else:
-                if exist: exist.deleteMe()
-            adsk.doEvents()
-        except: pass
+            if design:
+                storage = ZenStorage(design)
+                if not preset_name:
+                    storage.delete('current_preset')
+                else:
+                    storage.set('current_preset', preset_name)
+                adsk.doEvents()
+        except: 
+            log_diag(traceback.format_exc())
+            
+        self._send_initial_data()
 
     def _handle_batch_update(self, data, args):
         items = []
@@ -543,8 +538,7 @@ class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
             app = adsk.core.Application.get()
             design = adsk.fusion.Design.cast(app.activeProduct)
             if design:
-                p = design.userParameters.itemByName('_zen_current_preset')
-                if p: current_preset = p.comment
+                current_preset = ZenStorage.get_current_preset_name(design)
                 
                 # Check legacy
                 if not current_preset and design.userParameters.count > 0:

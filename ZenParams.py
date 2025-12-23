@@ -1,210 +1,193 @@
-import adsk.core
-import adsk.fusion
-import traceback
-import os
-import sys
-
-import importlib
+import adsk.core, adsk.fusion, traceback
+import os, sys, importlib
 
 # Ensure local lib directory is in path
 APP_PATH = os.path.dirname(os.path.abspath(__file__))
 if APP_PATH not in sys.path:
     sys.path.insert(0, APP_PATH)
 
-# Force Reload to fix Fusion 360 caching issues
+# Reload Dependencies
+import config
 import lib.zen_utils
 import lib.zen_crawler
 import lib.zen_handler
+importlib.reload(config)
 importlib.reload(lib.zen_utils)
 importlib.reload(lib.zen_crawler)
 importlib.reload(lib.zen_handler)
 
 from lib.zen_handler import ZenPaletteEventHandler
 
-# Global Reference
-_handlers = []
-_app = None
-_ui = None
-_last_active_doc_name = None 
-_palette_handler = None
+# Global instance for Fusion to hold onto
+_addin = None
 
-CMD_ID = 'zenparams_cmd_v2'
-PALETTE_ID = 'zenparams_palette_v8'
-
-# -----------------------------------------------------------------------------
-# EVENT HANDLERS (Top Level)
-# -----------------------------------------------------------------------------
-
-class StartupCompletedHandler(adsk.core.ApplicationEventHandler):
-    def notify(self, args):
-        try: show_palette()
-        except: pass
-
-class DocumentActivatedHandler(adsk.core.DocumentEventHandler):
-    def notify(self, args):
-        global _last_active_doc_name
+class ZenParamsAddin:
+    def __init__(self):
+        self.app = adsk.core.Application.get()
+        self.ui = self.app.userInterface
+        self.handlers = []
+        self.palette = None
+        
+    def run(self):
+        """Startup Entry Point"""
         try:
-            app = adsk.core.Application.get()
-            design = adsk.fusion.Design.cast(app.activeProduct)
-            current_doc_id = ""
-            if design and design.parentDocument:
-                try: current_doc_id = design.parentDocument.creationId
-                except: current_doc_id = design.parentDocument.name
-
-            if _last_active_doc_name == current_doc_id: return
-            _last_active_doc_name = current_doc_id
-             
-            # Send refresh signal via a temporary handler wrapper or direct event
-            # Note: Ideally we keep a reference to the active handler, but given 
-            # Fusion's stateless callback nature, we instantiate a sender helper.
-            # Simpler: Just make the palette refresh itself if visible.
-            palette = _ui.palettes.itemById(PALETTE_ID)
-            if palette and palette.isVisible:
-                 # Re-inject handler to force update? 
-                 # Actually, we just need to trigger the initial data push.
-                 # We can piggyback off the existing handler attached to the palette
-                 pass 
-
-        except: pass
-
-class CommandStartingHandler(adsk.core.ApplicationCommandEventHandler):
-    def notify(self, args):
-        try:
-             cmd_name = args.command.parentCommandDefinition.name
-             lib.zen_utils.log_diag(f"START-EVT: {cmd_name}")
-        except: pass
-
-class CommandTerminatedHandler(adsk.core.ApplicationCommandEventHandler):
-    def notify(self, args):
-        global _palette_handler
-        
-        # DEBUG: Confirm Fusion is firing the event
-        lib.zen_utils.log_diag("TERM-EVT Received!")
-        
-        try:
-            lib.zen_utils.log_file("MainEvt: Fired") 
-        except: pass
-
-        if _palette_handler:
-            try:
-                _palette_handler.on_command_terminated(args)
-            except: pass
-        else:
-            lib.zen_utils.log_diag("WARN: _palette_handler is None!")
-
-class CommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
-    def notify(self, args):
-        try: show_palette(toggle=True)
-        except: pass
-
-# -----------------------------------------------------------------------------
-# MAIN HELPERS
-# -----------------------------------------------------------------------------
-
-def show_palette(toggle=False):
-    global _ui, _handlers, _palette_handler
-    
-    palette = _ui.palettes.itemById(PALETTE_ID)
-    if not palette:
-        html_path = os.path.join(APP_PATH, 'ui', 'index.html')
-        html_file_url = html_path.replace('\\', '/')
-        if not html_file_url.startswith('file:///'):
-             if not html_file_url.startswith('/'): html_file_url = '/' + html_file_url
-             html_file_url = 'file://' + html_file_url
-        
-        palette = _ui.palettes.add(PALETTE_ID, 'ZenParams Pro', html_file_url, True, True, True, 320, 600)
-        
-        try: palette.dockingState = adsk.core.PaletteDockingStates.PaletteDockStateRight
-        except: pass
-
-        # Register Event Handler from Lib (ONLY ON CREATION)
-        on_html_event = ZenPaletteEventHandler(PALETTE_ID, APP_PATH)
-        palette.incomingFromHTML.add(on_html_event)
-        _handlers.append(on_html_event) # Keep alive
-        _palette_handler = on_html_event # Store for background events
-    else:
-        if toggle: palette.isVisible = not palette.isVisible
-        else: palette.isVisible = True
-
-def run(context):
-    global _app, _ui, _palette_handler
-    try:
-        _app = adsk.core.Application.get()
-        _ui = _app.userInterface
-        adsk.autoTerminate(False)
-        
-        # Add Command
-        cmd_def = _ui.commandDefinitions.itemById(CMD_ID)
-        if cmd_def: cmd_def.deleteMe()
-        cmd_def = _ui.commandDefinitions.addButtonDefinition(CMD_ID, 'ZenParams Pro', 'Open ZenParams Palette', './resources')
-        
-        on_created = CommandCreatedHandler()
-        cmd_def.commandCreated.add(on_created)
-        _handlers.append(on_created)
-        
-        # Add to Toolbar
-        modify_panel = _ui.allToolbarPanels.itemById('SolidModifyPanel')
-        if modify_panel:
-            if not modify_panel.controls.itemById(CMD_ID):
+            adsk.autoTerminate(False)
+            
+            # 1. Cleanup Old (Safety)
+            self._cleanup_ui()
+            
+            # 2. Create Command Definition
+            cmd_def = self.ui.commandDefinitions.addButtonDefinition(
+                config.CMD_ID, 
+                'ZenParams Pro', 
+                'Open ZenParams Palette', 
+                os.path.join(APP_PATH, 'resources')
+            )
+            
+            # 3. Add to Toolbar
+            modify_panel = self.ui.allToolbarPanels.itemById(config.PANEL_ID)
+            if modify_panel:
                 modify_panel.controls.addCommand(cmd_def)
+                
+            # 4. Bind Command Created Event
+            on_created = CommandCreatedHandler(self)
+            cmd_def.commandCreated.add(on_created)
+            self.handlers.append((cmd_def.commandCreated, on_created))
             
-        # Clean old palette
-        palette = _ui.palettes.itemById(PALETTE_ID)
-        if palette: palette.deleteMe()
-        
-        show_palette()
-        
-        lib.zen_utils.log_diag("ZenParams v11 STARTUP: Handlers Registered")
-        
-        # DEBUG: Verify Log Path
-        log_path_debug = os.path.join(lib.zen_utils.APP_PATH, 'zen_debug.log')
-        lib.zen_utils.log_diag(f"Log Path: {log_path_debug}")
-        
-        try:
-            lib.zen_utils.log_file(f"ZenParams Startup. Handlers: {len(_handlers)}")
-            lib.zen_utils.log_diag("Log File Write: SUCCESS")
-        except Exception as e:
-            lib.zen_utils.log_diag(f"Log File Write: FAILED ({e})")
-        
-        # Startup Handler
-        if not _app.isStartupComplete:
-            on_start = StartupCompletedHandler()
-            _app.startupCompleted.add(on_start)
-            _handlers.append(on_start)
+            # 5. Show Palette immediately
+            self.show_palette()
             
-        # Doc Handler
-        on_doc = DocumentActivatedHandler()
-        _app.documentActivated.add(on_doc)
-        _handlers.append(on_doc)
-        
-        
-        # Command Terminated Handler (Background Watcher)
-        on_term = CommandTerminatedHandler()
-        is_ok_term = _ui.commandTerminated.add(on_term)
-        _handlers.append(on_term)
-        
-        # Command Starting Handler (Comparison Test)
-        on_start_cmd = CommandStartingHandler()
-        is_ok_start = _ui.commandStarting.add(on_start_cmd)
-        _handlers.append(on_start_cmd)
-        
-        lib.zen_utils.log_diag(f"handlers: {len(_handlers)} | Term={is_ok_term} Start={is_ok_start}")
-        lib.zen_utils.log_diag("ZenParams v11 READY")
-        
-    except:
-        if _ui: _ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
+            # 6. Global Application Events
+            self._register_global_events()
+            
+            lib.zen_utils.log_diag("ZenParams v2 STARTED.")
 
-def stop(context):
-    global _ui
-    try:
-        palette = _ui.palettes.itemById(PALETTE_ID)
-        if palette: palette.deleteMe()
+        except:
+            self.ui.messageBox('Startup Failed:\n{}'.format(traceback.format_exc()))
+
+    def stop(self):
+        """Shutdown Entry Point"""
+        try:
+            # 1. Clean UI
+            self._cleanup_ui()
+            
+            # 2. Unregister ALL Handlers
+            for event, handler in self.handlers:
+                try: event.remove(handler)
+                except: pass
+            self.handlers.clear()
+            
+
+                
+            lib.zen_utils.log_diag("ZenParams v2 STOPPED.")
+            
+        except:
+            if self.ui:
+                self.ui.messageBox('Shutdown Failed:\n{}'.format(traceback.format_exc()))
+
+    def show_palette(self, toggle=False):
+        """Show or Toggle Palette"""
+        self.palette = self.ui.palettes.itemById(config.PALETTE_ID)
         
-        cmd = _ui.commandDefinitions.itemById(CMD_ID)
+        if not self.palette:
+            html_path = os.path.join(APP_PATH, 'ui', 'index.html')
+            # Normalize path for binding
+            html_file_url = html_path.replace('\\', '/')
+            if not html_file_url.startswith('file:///'):
+                 if not html_file_url.startswith('/'): html_file_url = '/' + html_file_url
+                 html_file_url = 'file://' + html_file_url
+            
+            self.palette = self.ui.palettes.add(
+                config.PALETTE_ID, 'ZenParams Pro', html_file_url, True, True, True, 320, 600
+            )
+            try:
+                self.palette.dockingState = adsk.core.PaletteDockingStates.PaletteDockStateRight
+            except:
+                lib.zen_utils.log_diag("WARN: Failed to set Docking State (pArea)")
+            
+            # Bind HTML Event
+            on_html_event = ZenPaletteEventHandler(config.PALETTE_ID, APP_PATH)
+            self.palette.incomingFromHTML.add(on_html_event)
+            self.handlers.append((self.palette.incomingFromHTML, on_html_event))
+            
+        else:
+            if toggle:
+                self.palette.isVisible = not self.palette.isVisible
+            else:
+                self.palette.isVisible = True
+    
+    def _cleanup_ui(self):
+        """Remove Command and Palette interfaces"""
+        cmd = self.ui.commandDefinitions.itemById(config.CMD_ID)
         if cmd: cmd.deleteMe()
         
-        modify_panel = _ui.allToolbarPanels.itemById('SolidModifyPanel')
-        if modify_panel:
-            c = modify_panel.controls.itemById(CMD_ID)
-            if c: c.deleteMe()
-    except: pass
+        panel = self.ui.allToolbarPanels.itemById(config.PANEL_ID)
+        if panel:
+            ctrl = panel.controls.itemById(config.CMD_ID)
+            if ctrl: ctrl.deleteMe()
+            
+        pal = self.ui.palettes.itemById(config.PALETTE_ID)
+        if pal: pal.deleteMe()
+
+    def _register_global_events(self):
+        """Register App-level events"""
+        # Startup
+        if not self.app.isStartupComplete:
+            on_start = StartupCompletedHandler(self)
+            self.app.startupCompleted.add(on_start)
+            self.handlers.append((self.app.startupCompleted, on_start))
+            
+        # Doc Activation
+        on_doc = DocumentActivatedHandler(self)
+        self.app.documentActivated.add(on_doc)
+        self.handlers.append((self.app.documentActivated, on_doc))
+
+# -----------------------------------------------------------------------------
+# EVENT HANDLERS
+# -----------------------------------------------------------------------------
+
+class CommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
+    def __init__(self, addin):
+        super().__init__()
+        self.addin = addin
+    def notify(self, args):
+        try:
+            self.addin.show_palette(toggle=True)
+        except:
+            if self.addin.ui: self.addin.ui.messageBox(traceback.format_exc())
+
+class StartupCompletedHandler(adsk.core.ApplicationEventHandler):
+    def __init__(self, addin):
+        super().__init__()
+        self.addin = addin
+    def notify(self, args):
+        try:
+            self.addin.show_palette(toggle=False)
+        except:
+            lib.zen_utils.log_diag(traceback.format_exc())
+
+class DocumentActivatedHandler(adsk.core.DocumentEventHandler):
+    def __init__(self, addin):
+        super().__init__()
+        self.addin = addin
+    def notify(self, args):
+        # Refresh logic here if needed
+        pass
+
+# -----------------------------------------------------------------------------
+# LIFECYCLE
+# -----------------------------------------------------------------------------
+
+def run(context):
+    global _addin
+    try:
+        _addin = ZenParamsAddin()
+        _addin.run()
+    except:
+        adsk.core.Application.get().userInterface.messageBox(traceback.format_exc())
+
+def stop(context):
+    global _addin
+    if _addin:
+        _addin.stop()
+        _addin = None

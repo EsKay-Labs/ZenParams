@@ -1,6 +1,7 @@
 import adsk.core
 import os
 import json
+import time
 
 # Global reference for logging
 _app = None

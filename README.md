@@ -130,3 +130,46 @@ When you use ZenParams, you aren't just drawing lines. You are defining **Design
 ## 📜 License
 
 MIT. Go forth and parameterize.
+
+---
+
+## 🧪 Testing
+
+ZenParams includes a comprehensive test suite to verify both logic and Fusion 360 integration.
+
+### How to Run Tests
+
+1.  Open Fusion 360.
+2.  Go to **Scripts and Add-Ins**.
+3.  Select **ZenParams** (the folder containing `test_suite.py`).
+4.  Run the `test_suite.py` script (if visible) OR edit `ZenParams.manifest` to point to `test_suite.py` temporarily if you want to run it as the main script.
+    - _Easier Method:_ The test suite is designed to be run as a script. If it doesn't appear, you can open it in the VS Code editor via Fusion and run it, or rename `test_suite.py` to `ZenParams_Tests.py` so Fusion sees it as a separate script if you move it to its own folder.
+    - **Recommended:** We have provided `test_suite.py` in the root. To run it:
+      1.  Open the "Text Commands" palette in Fusion.
+      2.  Switch to "Py" (Python) mode.
+      3.  Type: `import importlib.util; spec = importlib.util.spec_from_file_location("test_suite", r"C:\path\to\ZenParams\test_suite.py"); module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module); module.run(None)`
+      - _(Or just simply copy `test_suite.py` content and paste it into a new Script within Fusion if you interpret "running from IDE" difficult)._
+
+### Test Scope
+
+- **Pure Logic:** Verifies Preset saving/loading and Smart Fit data migration.
+- **Fusion Integration:**
+  - Creates a temporary "Clean Room" document.
+  - Generates 3D geometry (Box).
+  - Links parameters.
+  - Verifies that the `DependencyCrawler` correctly identifies the relationship.
+  - Closes the document automatically (no save).
+
+> **Note:** Check `test_output/test_results.txt` for detailed logs after running.
+
+---
+
+## 🏗️ v2 Refactor (Architectural Overhaul)
+
+We have recently migrated the core architecture from a simple script to a robust **Class-Based Add-in** structure.
+
+### Key Changes
+
+- **No More Zombie Processes**: `stop()` now explicitly unregisters all event handlers.
+- **Improved Stability**: Startup/Shutdown is idempotent.
+- **Automated Verification**: Use `ZenParams_TestRunner` to verify lifecycle stability.

@@ -24,35 +24,26 @@ class ZenDependencyCrawler:
         Determines the owner body(ies) for a parameter by scanning for usage.
         Returns: 
             - None if no usage found (Unused)
-            - ["BodyName"] if used by exactly one body
-            - ["Body1", "Body2", ...] if used by multiple bodies (Shared)
+            - ["ComponentName/BodyName"] if used by exactly one body
+            - ["Comp1/Body1", "Comp2/Body2", ...] if used by multiple bodies (Shared)
         """
         if not param.isValid: return None
         
         target_name = param.name
-        driven_bodies = set()
+        driven_paths = set()  # Changed from driven_bodies
         
         try:
             # Reverse-Reverse Indexing:
             # We can't ask a param what uses it.
             # We MUST ask all ModelParameters if they use this param.
             
-            # This search could be slow, but for 50-100 user params and ~1000 model params
-            # it should be sub-second.
-            
-            # Pre-compile regex for strict word match
             import re
             pattern = re.compile(rf"\b{re.escape(target_name)}\b")
             
             for model_param in self.design.allParameters:
-                # optimization: skip if expression is empty or explicitly static
                 if not model_param.expression: continue
                 
-                # Check for usage
                 if pattern.search(model_param.expression):
-                    # Found usage! model_param is driven by user_param.
-                    # Who owns model_param?
-                    
                     creator = model_param.createdBy
                     if not creator or not creator.isValid: continue
                     
@@ -74,34 +65,39 @@ class ZenDependencyCrawler:
                         target_token = creator.entityToken
 
                     if target_token and target_token in self.entity_map:
-                        found_bodies = self.entity_map[target_token]
-                        driven_bodies.update(found_bodies)
-                        log_diag(f"  MATCH: {target_name} -> {model_param.name} -> {list(found_bodies)}")
+                        found_paths = self.entity_map[target_token]
+                        driven_paths.update(found_paths)
+                        log_diag(f"  MATCH: {target_name} -> {model_param.name} -> {list(found_paths)}")
                     
                     elif creator and hasattr(creator, 'parentComponent'):
-                        # Fallback: If not mapped to a body (e.g. unconsumed sketch),
-                        # See if it belongs to a sub-component (not Root).
                         comp = creator.parentComponent
-                        root = self.design.rootComponent
                         if comp:
-                             # Allow Root Component Mapping (e.g. for sketches on origin)
-                             driven_bodies.add(comp.name)
-                             log_diag(f"  FALLBACK: {target_name} -> Component '{comp.name}'")
-                        elif target_token:
-                             creator_type = creator.objectType if hasattr(creator, 'objectType') else type(creator).__name__
-                             log_diag(f"  MISS: {target_name} -> {creator_type} (Unconsumed in Root)")
+                             # Map to component only (no body)
+                             path = comp.name
+                             driven_paths.add(path)
+                             log_diag(f"  FALLBACK: {target_name} -> Component '{path}'")
                     
                     elif target_token:
                         creator_type = creator.objectType if hasattr(creator, 'objectType') else type(creator).__name__
-                        log_diag(f"  MISS: {target_name} -> {model_param.name} [{creator_type}] (Token {target_token[:5]}... not in map)")
+                        log_diag(f"  MISS: {target_name} -> {model_param.name} [{creator_type}] (Token not in map)")
 
         except Exception as e:
             log_diag(f"Param Trace Error: {e}")
         
-        # Return as list for caller to analyze
-        if len(driven_bodies) == 0: 
-            return None  # Unused
-        return list(driven_bodies)  # List of 1+ body names
+        # Prune redundant paths (e.g. if we have "Comp" and "Comp/Body", remove "Comp")
+        # This fixes the issue where Sketch-on-Origin parameters are marked as Shared
+        # because they map to both the Component (Fallback) and the Body (Feature Usage).
+        final_paths = set(driven_paths)
+        for p in driven_paths:
+            # If p is a prefix of any other path (implied parent), remove it
+            # We look for "p/" to ensure it acts as a folder
+            is_redundant = any(other.startswith(p + "/") for other in driven_paths)
+            if is_redundant:
+                final_paths.discard(p)
+                
+        if len(final_paths) == 0: 
+            return None
+        return list(final_paths)
 
     def _build_reverse_map(self):
         """
@@ -131,11 +127,13 @@ class ZenDependencyCrawler:
                     for k in range(feat.bodies.count):
                         body = feat.bodies.item(k)
                         if body and body.isValid:
-                            body_name = body.name
-                            # Map Feature -> Body
-                            self._map_entity(feat, body_name)
-                            # Map Source Sketch -> Body
-                            self._map_feature_to_sketch(feat, body_name)
+                            # Build Component/Body path
+                            comp_name = body.parentComponent.name if body.parentComponent else "Root"
+                            path = f"{comp_name}/{body.name}"
+                            # Map Feature -> Path
+                            self._map_entity(feat, path)
+                            # Map Source Sketch -> Path
+                            self._map_feature_to_sketch(feat, path)
                 
                 # Special Case: Sketch created ON a Body Face
                 # Even if not extruded yet, it belongs to that Body.
@@ -146,14 +144,16 @@ class ZenDependencyCrawler:
                         if isinstance(plane, adsk.fusion.BRepFace):
                             body = plane.body
                             if body and body.isValid:
-                                self._map_entity(feat, body.name)
-                                log_diag(f"  Mapped Sketch-on-Face {feat.name} -> {body.name}")
+                                comp_name = body.parentComponent.name if body.parentComponent else "Root"
+                                path = f"{comp_name}/{body.name}"
+                                self._map_entity(feat, path)
+                                log_diag(f"  Mapped Sketch-on-Face {feat.name} -> {path}")
                                 is_mapped = True
                         
-                        # Fallback: Map to component (e.g. Sketch on Origin Plane)
+                        # Fallback: Map to component only (e.g. Sketch on Origin Plane)
                         if not is_mapped and feat.parentComponent:
                             comp_name = feat.parentComponent.name
-                            self._map_entity(feat, comp_name)
+                            self._map_entity(feat, comp_name)  # Just component, no body
                             log_diag(f"  Mapped Sketch (Generic) {feat.name} -> {comp_name}")
 
                     except: pass
@@ -163,15 +163,15 @@ class ZenDependencyCrawler:
         except Exception as e:
             log_diag(f"Crawler Map Error: {e}")
 
-    def _map_entity(self, entity, body_name):
+    def _map_entity(self, entity, path):
         try:
             token = entity.entityToken
             if token not in self.entity_map:
                 self.entity_map[token] = set()
-            self.entity_map[token].add(body_name)
+            self.entity_map[token].add(path)
         except: pass
 
-    def _map_feature_to_sketch(self, feat, body_name):
+    def _map_feature_to_sketch(self, feat, path):
         # Extract profiles/points to find the sketch
         try:
             # 1. Profile-based (Extrude, Revolve, Sweep, Loft)
@@ -180,15 +180,15 @@ class ZenDependencyCrawler:
                 if profile:
                     # Single Profile
                     if isinstance(profile, adsk.fusion.Profile):
-                        self._map_entity(profile.parentSketch, body_name)
-                        log_diag(f"    Mapped Sketch {profile.parentSketch.entityToken[:5]}... -> {body_name}")
+                        self._map_entity(profile.parentSketch, path)
+                        log_diag(f"    Mapped Sketch {profile.parentSketch.entityToken[:5]}... -> {path}")
                     # Profile Collection
                     elif hasattr(profile, 'count'): 
                         for k in range(profile.count):
                             item = profile.item(k)
                             if isinstance(item, adsk.fusion.Profile):
-                                self._map_entity(item.parentSketch, body_name)
-                                log_diag(f"    Mapped Sketch {item.parentSketch.entityToken[:5]}... -> {body_name}")
+                                self._map_entity(item.parentSketch, path)
+                                log_diag(f"    Mapped Sketch {item.parentSketch.entityToken[:5]}... -> {path}")
                                 
             # 2. Hole Feature (Uses sketchPoints)
             if isinstance(feat, adsk.fusion.HoleFeature):
@@ -197,7 +197,7 @@ class ZenDependencyCrawler:
                 if points and points.count > 0:
                     pt = points.item(0)
                     if hasattr(pt, 'parentSketch'):
-                         self._map_entity(pt.parentSketch, body_name)
+                         self._map_entity(pt.parentSketch, path)
                          
              # 3. Emboss (Uses sketchProfiles)
             if isinstance(feat, adsk.fusion.EmbossFeature):
@@ -205,7 +205,7 @@ class ZenDependencyCrawler:
                  if profs and profs.count > 0:
                      p = profs.item(0)
                      if isinstance(p, adsk.fusion.Profile):
-                         self._map_entity(p.parentSketch, body_name)
+                         self._map_entity(p.parentSketch, path)
 
         except: pass
 
