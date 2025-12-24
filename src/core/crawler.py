@@ -1,7 +1,7 @@
 import adsk.core, adsk.fusion
 import traceback
 import re
-from .zen_utils import log_diag
+from .utils import log_diag
 
 class ZenDependencyCrawler:
     """

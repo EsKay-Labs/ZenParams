@@ -1,6 +1,6 @@
 import adsk.core, adsk.fusion
 import traceback
-from .zen_utils import log_diag
+from .utils import log_diag
 
 GROUP_NAME = "ZenParams"
 

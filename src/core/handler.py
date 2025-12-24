@@ -4,9 +4,9 @@ import json
 import traceback
 import time
 import re
-from .zen_utils import log_diag, log_file, PresetManager, FitManager
-from .zen_crawler import ZenDependencyCrawler
-from .zen_storage import ZenStorage
+from .utils import log_diag, log_file, PresetManager, FitManager
+from .crawler import ZenDependencyCrawler
+from .storage import ZenStorage
 
 class ZenPaletteEventHandler(adsk.core.HTMLEventHandler):
     """Handles messages coming from the HTML Palette."""

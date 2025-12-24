@@ -8,21 +8,18 @@ import json
 import math
 
 # --- SETUP PATHS ---
-APP_PATH = os.path.dirname(os.path.abspath(__file__))
+# --- SETUP PATHS ---
+APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # Go up one level to root
+TEST_DIR = os.path.join(APP_PATH, 'tests', 'output')
+
 if APP_PATH not in sys.path:
     sys.path.insert(0, APP_PATH)
 
 # Import ZenParams Tests
 try:
-    import lib.zen_utils as zen_utils
-    from lib.zen_crawler import ZenDependencyCrawler
-    from lib.zen_handler import ZenPaletteEventHandler
+    from src.core import utils, crawler, handler
 except ImportError:
-    # If running from IDE context without full path
     pass
-
-# --- CONSTANTS ---
-TEST_DIR = os.path.join(APP_PATH, 'test_output')
 
 # --- CONTEXT MANAGERS ---
 
@@ -69,7 +66,7 @@ class TestPureLogic(unittest.TestCase):
 
     def test_preset_manager_io(self):
         """Verify Presets can be saved and loaded."""
-        mgr = zen_utils.PresetManager(self.test_dir)
+        mgr = utils.PresetManager(self.test_dir)
         
         # 1. Test Default Load
         defaults = mgr.get_defaults()
@@ -91,7 +88,7 @@ class TestPureLogic(unittest.TestCase):
 
     def test_fit_manager_migration(self):
         """Verify FitManager correctly migrates legacy flat files."""
-        mgr = zen_utils.FitManager(self.test_dir)
+        mgr = utils.FitManager(self.test_dir)
         
         # 1. Seed legacy file
         legacy_data = {"bolt": 0.5, "my_custom_fit": 0.15}
@@ -159,8 +156,8 @@ class TestFusionIntegration(unittest.TestCase):
             dist_param.expression = "BoxHeight"
             
             # 4. Crawl
-            crawler = ZenDependencyCrawler(design)
-            driven_bodies = crawler.get_param_body_name(param)
+            craw = crawler.ZenDependencyCrawler(design)
+            driven_bodies = craw.get_param_body_name(param)
             
             # 5. Assert 
             # Should return ["TestCube"] (or "Root/TestCube" depending on implementation)
@@ -182,7 +179,7 @@ class TestFusionIntegration(unittest.TestCase):
         
         with TestContext() as ctx:
             design = ctx.design
-            handler = ZenPaletteEventHandler("TEST_PALETTE", self.test_dir if hasattr(self, 'test_dir') else APP_PATH)
+            hdlr = handler.ZenPaletteEventHandler("TEST_PALETTE", self.test_dir if hasattr(self, 'test_dir') else APP_PATH)
             
             # 1. Create Body & Param (similar to above)
             root = design.rootComponent
@@ -211,7 +208,7 @@ class TestFusionIntegration(unittest.TestCase):
             adsk.doEvents()
             
             # We explicitly pass force_map_refresh=True
-            handler._auto_sort_params(force_map_refresh=True)
+            hdlr._auto_sort_params(force_map_refresh=True)
             
             # 4. Verify Comment Update
             # Should be "[SortingBody] Old Comment"
@@ -245,7 +242,7 @@ class TestFusionIntegration(unittest.TestCase):
         with TestContext() as ctx:
             design = ctx.design
             root = design.rootComponent
-            handler = ZenPaletteEventHandler("TEST_PALETTE", APP_PATH)
+            hdlr = handler.ZenPaletteEventHandler("TEST_PALETTE", APP_PATH)
             
             # 1. Create a body for context
             sk = root.sketches.add(root.xYConstructionPlane)
@@ -276,7 +273,7 @@ class TestFusionIntegration(unittest.TestCase):
                     self.data = json.dumps(batch_data)
                     self.returnData = None
             
-            handler._handle_batch_update(batch_data, MockArgs())
+            hdlr._handle_batch_update(batch_data, MockArgs())
             
             # 4. Verify parameter was created
             created_param = design.userParameters.itemByName('NewTestParam')

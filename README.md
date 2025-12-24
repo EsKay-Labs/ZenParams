@@ -150,8 +150,8 @@ ZenParams includes a comprehensive test suite to verify both logic and Fusion 36
     - **Recommended:** We have provided `test_suite.py` in the root. To run it:
       1.  Open the "Text Commands" palette in Fusion.
       2.  Switch to "Py" (Python) mode.
-      3.  Type: `import importlib.util; spec = importlib.util.spec_from_file_location("test_suite", r"C:\path\to\ZenParams\test_suite.py"); module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module); module.run(None)`
-      - _(Or just simply copy `test_suite.py` content and paste it into a new Script within Fusion if you interpret "running from IDE" difficult)._
+      3.  Type: `import importlib.util; spec = importlib.util.spec_from_file_location("test_suite", r"C:\path\to\ZenParams\tests\run_tests.py"); module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module); module.run(None)`
+      - _(Or just simply copy `tests/run_tests.py` content and paste it into a new Script within Fusion if you interpret "running from IDE" difficult)._
 
 ### Test Scope
 
